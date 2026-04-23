@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 from chaveamento import registrar_resultado_por_mesa
-from models import db, Placar, Mesa
+from models import db, Placar, Mesa, ResultadoPartida
 from ittf_rules import validar_ponto_ittf, proximo_servidor, proximo_set, gerar_status_jogo, servidor_proximo_set
 
 bp = Blueprint('placar', __name__, url_prefix='/api/placar')
@@ -76,9 +76,9 @@ def adicionar_ponto(mesa_id):
             placar.pontos_time2 += 1
         
         # Contabiliza pontos marcados para cada jogador do time que marcou
-        for jogador in mesa.jogadores:
-            if jogador.time == time_ponto:
-                jogador.pontos_marcados += 1
+        for jogador_mesa in mesa.jogadores_mesa:
+            if jogador_mesa.time == time_ponto:
+                jogador_mesa.pontos_marcados += 1
         
         # Valida se o set deve acabar
         validacao = validar_ponto_ittf(placar.pontos_time1, placar.pontos_time2)
@@ -99,10 +99,10 @@ def adicionar_ponto(mesa_id):
             placar.sets_time2 = result_jogo['sets_time2']
             
             # Contabiliza sets vencidos para cada jogador do time vencedor
-            for jogador in mesa.jogadores:
-                if jogador.time == vencedor_set:
-                    jogador.sets_vencidos += 1
-                    print(f"[SET CONTABILIZADO] Jogador {jogador.nome} (Time {vencedor_set}) venceu um set. Total: {jogador.sets_vencidos}")
+            for jogador_mesa in mesa.jogadores_mesa:
+                if jogador_mesa.time == vencedor_set:
+                    jogador_mesa.sets_vencidos += 1
+                    print(f"[SET CONTABILIZADO] Jogador {jogador_mesa.jogador.nome} (Time {vencedor_set}) venceu um set. Total: {jogador_mesa.sets_vencidos}")
             
             resposta['set_info'] = {
                 'set_terminado': True,
@@ -118,7 +118,7 @@ def adicionar_ponto(mesa_id):
                 
                 # Determinar qual jogador/time venceu mais sets
                 vencedor_time = result_jogo['vencedor_jogo']
-                jogadores_vencedores = [j for j in mesa.jogadores if j.time == vencedor_time]
+                jogadores_vencedores = [j for j in mesa.jogadores_mesa if j.time == vencedor_time]
                 
                 resposta['jogo_info'] = {
                     'jogo_finalizado': True,
@@ -241,16 +241,16 @@ def remover_ponto(mesa_id):
             if placar.pontos_time1 > 0:
                 placar.pontos_time1 -= 1
                 # Decrementa pontos marcados dos jogadores do time
-                for jogador in mesa.jogadores:
-                    if jogador.time == time_remove and jogador.pontos_marcados > 0:
-                        jogador.pontos_marcados -= 1
+                for jogador_mesa in mesa.jogadores_mesa:
+                    if jogador_mesa.time == time_remove and jogador_mesa.pontos_marcados > 0:
+                        jogador_mesa.pontos_marcados -= 1
         else:
             if placar.pontos_time2 > 0:
                 placar.pontos_time2 -= 1
                 # Decrementa pontos marcados dos jogadores do time
-                for jogador in mesa.jogadores:
-                    if jogador.time == time_remove and jogador.pontos_marcados > 0:
-                        jogador.pontos_marcados -= 1
+                for jogador_mesa in mesa.jogadores_mesa:
+                    if jogador_mesa.time == time_remove and jogador_mesa.pontos_marcados > 0:
+                        jogador_mesa.pontos_marcados -= 1
         
         resposta = {
             'placar': placar.to_dict(),
@@ -571,7 +571,7 @@ def iniciar_jogo(mesa_id):
         return jsonify({'erro': 'Placar não encontrado'}), 404
     
     # Verifica se há pelo menos 2 jogadores (um por time)
-    if len(mesa.jogadores) < 2:
+    if len(mesa.jogadores_mesa) < 2:
         return jsonify({'erro': 'É necessário pelo menos 2 jogadores (um por time)'}), 400
     
     try:
@@ -608,3 +608,115 @@ def iniciar_jogo(mesa_id):
     except Exception as e:
         db.session.rollback()
         return jsonify({'erro': str(e)}), 400
+
+@bp.route('/mesa/<int:mesa_id>/liberar', methods=['POST'])
+def liberar_mesa(mesa_id):
+    """
+    Libera a mesa após fim de partida:
+    1. Registra o resultado da partida no chaveamento
+    2. Remove todos os jogadores da mesa
+    3. Reseta o placar para estado inicial
+    4. Muda o status da mesa para disponível
+    
+    Espera: { "vencedor_time": 1 ou 2 }
+    """
+    mesa = Mesa.query.get(mesa_id)
+    
+    if not mesa:
+        return jsonify({'erro': 'Mesa não encontrada', 'sucesso': False}), 404
+    
+    if not mesa.placar:
+        return jsonify({'erro': 'Placar não encontrado', 'sucesso': False}), 404
+    
+    dados = request.get_json()
+    vencedor_time = dados.get('vencedor_time') if dados else None
+    
+    if vencedor_time not in [1, 2]:
+        return jsonify({'erro': 'vencedor_time deve ser 1 ou 2', 'sucesso': False}), 400
+    
+    try:
+        print(f"[LIBERAR MESA] Iniciando liberação da mesa {mesa_id}")
+        
+        # 1. Registrar resultado da partida
+        tipo_resultado, partida_resultado = registrar_resultado_por_mesa(mesa, vencedor_time)
+        if partida_resultado:
+            print(f"[LIBERAR MESA] Resultado registrado: {tipo_resultado} - Partida {partida_resultado.id}")
+        else:
+            print(f"[LIBERAR MESA] Nenhuma partida de chaveamento encontrada para registrar resultado")
+        
+        # 2. Registrar resultado no histórico de partidas (para o ranking)
+        placar = mesa.placar
+        
+        # Obter nomes dos jogadores antes de deletar
+        jogadores_time1 = [j.jogador.nome for j in mesa.jogadores_mesa if j.time == 1]
+        jogadores_time2 = [j.jogador.nome for j in mesa.jogadores_mesa if j.time == 2]
+        
+        resultado_partida = ResultadoPartida(
+            mesa_id=mesa_id,
+            campeonato_id=mesa.campeonato_id,
+            jogadores_time1=' & '.join(jogadores_time1) if jogadores_time1 else 'Vazio',
+            jogadores_time2=' & '.join(jogadores_time2) if jogadores_time2 else 'Vazio',
+            pontos_time1=placar.pontos_time1,
+            pontos_time2=placar.pontos_time2,
+            sets_time1=placar.sets_time1,
+            sets_time2=placar.sets_time2,
+            vencedor_time=vencedor_time
+        )
+        db.session.add(resultado_partida)
+        print(f"[LIBERAR MESA] Resultado registrado no histórico: {jogadores_time1} vs {jogadores_time2}")
+        
+        # 3. Remover todos os jogadores da mesa (apenas desvincular, não deletar)
+        jogadores_removidos = []
+        for jogador in mesa.jogadores:
+            jogadores_removidos.append(jogador.nome)
+            jogador.mesa_id = None  # Apenas desvincula da mesa, não deleta o registro
+        
+        print(f"[LIBERAR MESA] Jogadores desvinculados da mesa: {', '.join(jogadores_removidos) if jogadores_removidos else 'nenhum'}")
+        
+        # 4. Resetar o placar
+        placar = mesa.placar
+        placar.pontos_time1 = 0
+        placar.pontos_time2 = 0
+        placar.set_numero = 1
+        placar.sets_time1 = 0
+        placar.sets_time2 = 0
+        placar.servidor_inicial_jogo = 1
+        placar.servidor_time = 1
+        placar.serves_no_set = 0
+        placar.lados_invertidos = False
+        placar.status = 'em_andamento'
+        
+        # 5. Muda o status da mesa para disponível
+        mesa.status = 'disponivel'
+        
+        db.session.commit()
+        
+        print(f"[LIBERAR MESA] Mesa {mesa_id} liberada com sucesso")
+        
+        # Broadcast da atualização para todos os clientes da mesa
+        broadcast_placar_update(mesa_id, placar.to_dict())
+        
+        # Também emitir atualização para a sala do campeonato
+        try:
+            from app import socketio
+            room_campeonato = f'campeonato_{mesa.campeonato_id}'
+            socketio.emit('mesa_atualizada', {
+                'mesa_id': mesa_id,
+                'mesa': mesa.to_dict()
+            }, room=room_campeonato)
+            print(f"[BROADCAST] Atualização de mesa liberada enviada para campeonato {mesa.campeonato_id}")
+        except Exception as e:
+            print(f"[BROADCAST ERROR] Erro ao enviar atualização da mesa: {e}")
+        
+        return jsonify({
+            'sucesso': True,
+            'mensagem': 'Mesa liberada com sucesso',
+            'placar': placar.to_dict(),
+            'jogadores_removidos': jogadores_removidos,
+            'resultado_registrado': bool(partida_resultado)
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"[LIBERAR MESA ERROR] {str(e)}")
+        return jsonify({'erro': str(e), 'sucesso': False}), 400

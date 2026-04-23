@@ -64,8 +64,8 @@ function carregarRanking() {
                                 ${jogador.campeonatos.length} campeonato${jogador.campeonatos.length !== 1 ? 's' : ''}
                             </div>
                         </td>
-                        <td><span class="badge-sets">${jogador.total_pontos}</span></td>
-                        <td><span class="badge-jogos">${jogador.total_sets}</span></td>
+                        <td><span class="badge-pontos">${jogador.total_pontos}</span></td>
+                        <td><span class="badge-sets">${jogador.total_sets}</span></td>
                         <td><span class="badge-jogos">${jogador.total_jogos}</span></td>
                         <td>
                             <div class="campeonatos-tags">

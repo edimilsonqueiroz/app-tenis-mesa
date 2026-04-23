@@ -75,8 +75,13 @@ class Mesa(db.Model):
     campeonato_id = db.Column(db.Integer, db.ForeignKey('campeonatos.id'), nullable=False)
     status = db.Column(db.String(20), default='disponivel')  # disponivel, em_uso, pausada
     
-    jogadores = db.relationship('Jogador', backref='mesa', lazy=True, cascade='all, delete-orphan')
+    jogadores_mesa = db.relationship('JogadorMesa', backref='mesa', lazy=True, cascade='all, delete-orphan')
     placar = db.relationship('Placar', uselist=False, backref='mesa', cascade='all, delete-orphan')
+    
+    @property
+    def jogadores(self):
+        """Propriedade para acessar jogadores através de JogadorMesa"""
+        return [jm.jogador for jm in self.jogadores_mesa]
     
     def to_dict(self):
         return {
@@ -84,8 +89,47 @@ class Mesa(db.Model):
             'numero': self.numero,
             'campeonato_id': self.campeonato_id,
             'status': self.status,
-            'jogadores': [j.to_dict() for j in self.jogadores],
+            'jogadores': [j.to_dict_com_mesa() for j in self.jogadores_mesa],
             'placar': self.placar.to_dict() if self.placar else None
+        }
+
+
+class JogadorMesa(db.Model):
+    """Tabela intermediária para vincular Jogador com Mesa"""
+    __tablename__ = 'jogadores_mesa'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    jogador_id = db.Column(db.Integer, db.ForeignKey('jogadores.id'), nullable=False)
+    mesa_id = db.Column(db.Integer, db.ForeignKey('mesas.id'), nullable=False)
+    
+    # Informações específicas do jogador nesta mesa
+    time = db.Column(db.Integer, nullable=False)  # 1 ou 2 (para duplas/simples)
+    sets_vencidos = db.Column(db.Integer, default=0)  # Contador de sets vencidos por este jogador
+    pontos_marcados = db.Column(db.Integer, default=0)  # Total de pontos marcados pelo jogador
+    
+    jogador = db.relationship('Jogador', backref='mesas_vinculadas')
+    
+    def to_dict(self):
+        """Retorna dados do jogador com informações da mesa"""
+        return {
+            'id': self.id,
+            'jogador_id': self.jogador_id,
+            'mesa_id': self.mesa_id,
+            'nome': self.jogador.nome,
+            'jogador_inscrito_id': self.jogador.jogador_inscrito_id,
+            'time': self.time,
+            'sets_vencidos': self.sets_vencidos,
+            'pontos_marcados': self.pontos_marcados
+        }
+    
+    def to_dict_simples(self):
+        """Retorna dados simplificados"""
+        return {
+            'id': self.id,
+            'nome': self.jogador.nome,
+            'time': self.time,
+            'sets_vencidos': self.sets_vencidos,
+            'pontos_marcados': self.pontos_marcados
         }
 
 
@@ -94,21 +138,68 @@ class Jogador(db.Model):
     
     id = db.Column(db.Integer, primary_key=True)
     nome = db.Column(db.String(100), nullable=False)
-    mesa_id = db.Column(db.Integer, db.ForeignKey('mesas.id'), nullable=False)
     jogador_inscrito_id = db.Column(db.Integer, db.ForeignKey('jogadores_inscritos.id'), nullable=True)
-    time = db.Column(db.Integer)  # 1 ou 2 (para duplas/simples)
-    sets_vencidos = db.Column(db.Integer, default=0)  # Contador de sets vencidos por este jogador
-    pontos_marcados = db.Column(db.Integer, default=0)  # Total de pontos marcados pelo jogador
     
     def to_dict(self):
         return {
             'id': self.id,
             'nome': self.nome,
+            'jogador_inscrito_id': self.jogador_inscrito_id
+        }
+    
+    def to_dict_com_mesa(self):
+        """Retorna dados do jogador para exibição na mesa"""
+        if self.mesas_vinculadas:
+            jm = self.mesas_vinculadas[0]  # Pegando o primeiro vínculo (deve haver apenas um ativo)
+            return {
+                'id': self.id,
+                'nome': self.nome,
+                'jogador_mesa_id': jm.id,
+                'mesa_id': jm.mesa_id,
+                'jogador_inscrito_id': self.jogador_inscrito_id,
+                'time': jm.time,
+                'sets_vencidos': jm.sets_vencidos,
+                'pontos_marcados': jm.pontos_marcados
+            }
+        return self.to_dict()
+
+
+class ResultadoPartida(db.Model):
+    __tablename__ = 'resultados_partidas'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    mesa_id = db.Column(db.Integer, db.ForeignKey('mesas.id'), nullable=True)
+    campeonato_id = db.Column(db.Integer, db.ForeignKey('campeonatos.id'), nullable=False)
+    
+    # Nomes dos jogadores (armazenam mesmo após deletar da mesa)
+    jogadores_time1 = db.Column(db.String(200), nullable=False)  # Nomes separados por " & "
+    jogadores_time2 = db.Column(db.String(200), nullable=False)  # Nomes separados por " & "
+    
+    # Pontos e sets finais
+    pontos_time1 = db.Column(db.Integer, default=0)
+    pontos_time2 = db.Column(db.Integer, default=0)
+    sets_time1 = db.Column(db.Integer, default=0)
+    sets_time2 = db.Column(db.Integer, default=0)
+    
+    # Vencedor
+    vencedor_time = db.Column(db.Integer)  # 1 ou 2
+    
+    # Data
+    data_conclusao = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
             'mesa_id': self.mesa_id,
-            'jogador_inscrito_id': self.jogador_inscrito_id,
-            'time': self.time,
-            'sets_vencidos': self.sets_vencidos,
-            'pontos_marcados': self.pontos_marcados
+            'campeonato_id': self.campeonato_id,
+            'jogadores_time1': self.jogadores_time1,
+            'jogadores_time2': self.jogadores_time2,
+            'pontos_time1': self.pontos_time1,
+            'pontos_time2': self.pontos_time2,
+            'sets_time1': self.sets_time1,
+            'sets_time2': self.sets_time2,
+            'vencedor_time': self.vencedor_time,
+            'data_conclusao': self.data_conclusao.isoformat() if self.data_conclusao else None
         }
 
 

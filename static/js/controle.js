@@ -8,7 +8,8 @@
         let mesasDisponiveis = [];  // Lista de mesas do campeonato
         let ladosInvertidos = false;
         let statusTimeoutId = null;
-
+        let vencedorJogoAtual = null;  // Armazena o vencedor do jogo para liberar mesa
+        
         socket.on('connect', function() {
             console.log('Conectado ao servidor');
             inscreverNaMesa(mesaId);
@@ -32,6 +33,16 @@
             if (data.mesa_id === mesaId) {
                 console.log('👥 Jogadores atualizados - recarregando mesa');
                 carregarMesa();
+            }
+        });
+
+        socket.on('qrcode_controle_lido', function(data) {
+            if (data.mesa_id === mesaId) {
+                console.log('📱 QR code do controle lido em outro dispositivo! Fechando modal...');
+                const modal = document.getElementById('qr-modal');
+                if (modal && modal.classList.contains('active')) {
+                    fecharQRCode();
+                }
             }
         });
 
@@ -572,6 +583,9 @@
             const nomeExibido = obterNomeDoTime(jogoInfo.vencedor);
             const score = `${jogoInfo.sets_finais.time1} × ${jogoInfo.sets_finais.time2}`;
             
+            // Armazenar vencedor para usar ao liberar a mesa
+            vencedorJogoAtual = jogoInfo.vencedor;
+            
             document.getElementById('modal-vencedor-nome').textContent = nomeExibido;
             document.getElementById('modal-vencedor-score').textContent = `${score} sets`;
             document.getElementById('modal-vencedor').classList.add('active');
@@ -601,6 +615,9 @@
             
             // Resetar flag de jogo finalizado
             jogoFinalizado = false;
+            
+            // Resetar vencedor
+            vencedorJogoAtual = null;
         }
 
         function voltarPaginaAnterior() {
@@ -636,28 +653,44 @@
             // Fecha a modal de vencedor
             document.getElementById('modal-vencedor').classList.remove('active');
             
-            // Faz requisição para resetar a mesa
-            fetch(`/api/placar/mesa/${mesaId}/reset`, {
+            // Validar que temos o vencedor
+            if (vencedorJogoAtual === null) {
+                alert('Erro: não foi possível recuperar o vencedor da partida');
+                return;
+            }
+            
+            // Faz requisição para liberar a mesa (salva resultado, remove jogadores e reseta)
+            fetch(`/api/placar/mesa/${mesaId}/liberar`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
-                }
+                },
+                body: JSON.stringify({
+                    vencedor_time: vencedorJogoAtual
+                })
             })
             .then(response => response.json())
             .then(data => {
                 if (data.sucesso) {
-                    console.log('Mesa resetada com sucesso');
+                    console.log('Mesa liberada com sucesso');
+                    console.log('Jogadores removidos:', data.jogadores_removidos);
+                    console.log('Resultado registrado:', data.resultado_registrado);
+                    
                     // Atualizar o display local
                     atualizarDisplay(data.placar);
                     // Resetar estado dos botões
                     resetarEstadoBotoes();
+                    // Limpar vencedor
+                    vencedorJogoAtual = null;
+                    // Recarregar dados da mesa
+                    carregarMesa();
                 } else {
                     alert('Erro: ' + data.erro);
                 }
             })
             .catch(error => {
-                console.error('Erro ao resetar mesa:', error);
-                alert('Erro ao resetar mesa');
+                console.error('Erro ao liberar mesa:', error);
+                alert('Erro ao liberar mesa');
             });
         }
 

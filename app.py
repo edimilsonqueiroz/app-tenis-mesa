@@ -216,6 +216,9 @@ def handle_controle_aberto(data):
             # Notifica para a sala do campeonato (para fechar modal em gerenciar_campeonato.html)
             emit('controle_conectado', {'mesa_id': mesa_id}, room=f'campeonato_{mesa.campeonato_id}')
             
+            # Notifica outras abas/dispositivos do controle para fechar modal de QR
+            emit('qrcode_controle_lido', {'mesa_id': mesa_id}, room=f'mesa_{mesa_id}')
+            
             print(f'[CONTROLE ABERTO] Mesa {mesa_id} - Campeonato {mesa.campeonato_id} - Sessão: {request.sid}')
 
 # ==================== BROADCASTING ====================

@@ -171,6 +171,16 @@
     margin-top: 2px;
 }
 
+.badge-pontos {
+    display: inline-block;
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    color: white;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-weight: 700;
+    font-size: 14px;
+}
+
 .badge-sets {
     display: inline-block;
     background: linear-gradient(135deg, var(--secondary-color), var(--secondary-dark));
