@@ -1,0 +1,225 @@
+{% extends "base.html" %}
+
+{% block title %}Regras ITTF - Tênis de Mesa{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/regras.css') }}">
+{% endblock %}
+
+{% block content %}
+    <div class="container-regras">
+        <button class="btn-voltar" onclick="window.location.href='/'">
+            <i class="fas fa-arrow-left"></i> Voltar
+        </button>
+
+        <div class="header-regras">
+            <h1>
+                <i class="fas fa-book"></i>
+                Regras ITTF
+            </h1>
+            <p>Federação Internacional de Tênis de Mesa - Regulamentações Oficiais</p>
+        </div>
+
+        <!-- Avisos Especiais -->
+        <div class="regras-especiais">
+            <h3>
+                <i class="fas fa-info-circle"></i>
+                Informações Importantes
+            </h3>
+            <p>
+                Estas são as principais regras de tênis de mesa segundo a ITTF (International Table Tennis Federation). 
+                Para competições oficiais, consulte sempre as regras completas no site oficial da ITTF: 
+                <a href="https://www.ittf.com" target="_blank" style="color: #ffc107; text-decoration: none; font-weight: 600;">www.ittf.com</a>
+            </p>
+        </div>
+
+        <div class="regras-grid">
+            <!-- Pontuação -->
+            <div class="regra-card">
+                <div class="regra-titulo">
+                    <span class="regra-icon"><i class="fas fa-star"></i></span>
+                    Sistema de Pontuação
+                </div>
+                <div class="regra-conteudo">
+                    <strong>Pontos:</strong> Um jogador marca um ponto sempre que:
+                </div>
+                <ul class="regra-lista">
+                    <li>O oponente não consegue fazer um saque válido</li>
+                    <li>O oponente não consegue fazer um retorno válido</li>
+                    <li>A bola tocada pelo oponente ultrapassa a linha final</li>
+                    <li>O oponente toca a bola mais de uma vez seguida</li>
+                    <li>O oponente toca a bola com a mão ou braço</li>
+                </ul>
+            </div>
+
+            <!-- Jogo -->
+            <div class="regra-card">
+                <div class="regra-titulo">
+                    <span class="regra-icon"><i class="fas fa-trophy"></i></span>
+                    Estrutura do Jogo
+                </div>
+                <div class="regra-conteudo">
+                    <strong>Pontos para vencer:</strong> Primeiro a 11 pontos
+                </div>
+                <div class="regra-destaque">
+                    <i class="fas fa-check-circle"></i> Diferença mínima: 2 pontos
+                </div>
+                <div class="regra-conteudo" style="margin-top: 12px;">
+                    <strong>Ex:</strong> Se o placar estiver 10-10, o jogo continua até 12-10, 13-11, etc.
+                </div>
+            </div>
+
+            <!-- Saque -->
+            <div class="regra-card">
+                <div class="regra-titulo">
+                    <span class="regra-icon"><i class="fas fa-hand-fist"></i></span>
+                    Regras do Saque
+                </div>
+                <ul class="regra-lista">
+                    <li>A bola é colocada na palma da mão aberta, acima da altura da mesa</li>
+                    <li>A bola é lançada para cima verticalmente, no mínimo 16cm</li>
+                    <li>A bola é batida quando desce, após passar acima da altura da mesa</li>
+                    <li>Cada jogador faz 2 saques consecutivos</li>
+                    <li>O saque deve ser diagonal (de direita para esquerda do oponente)</li>
+                    <li>A bola deve primeiro tocar o campo do sacador, depois ultrapassar a rede</li>
+                </ul>
+            </div>
+
+            <!-- Rodadas de Saque -->
+            <div class="regra-card">
+                <div class="regra-titulo">
+                    <span class="regra-icon"><i class="fas fa-arrows-rotate"></i></span>
+                    Rodadas de Saque
+                </div>
+                <div class="regra-destaque">
+                    <i class="fas fa-check-circle"></i> A cada 4 saques (2+2), o direito de saque passa para o oponente
+                </div>
+                <div class="regra-conteudo" style="margin-top: 12px;">
+                    <strong>Em caso de empate 10-10:</strong> Cada jogador faz apenas 1 saque por vez, alternando até o final do jogo.
+                </div>
+            </div>
+
+            <!-- Dimensões da Mesa -->
+            <div class="regra-card">
+                <div class="regra-titulo">
+                    <span class="regra-icon"><i class="fas fa-ruler-combined"></i></span>
+                    Dimensões da Mesa
+                </div>
+                <ul class="regra-lista">
+                    <li><strong>Comprimento:</strong> 2,74 metros</li>
+                    <li><strong>Largura:</strong> 1,525 metros</li>
+                    <li><strong>Altura:</strong> 0,76 metros (do solo à superfície)</li>
+                    <li><strong>Altura da rede:</strong> 15,25 cm</li>
+                    <li><strong>Cor:</strong> Azul escuro ou verde escuro (fosco)</li>
+                    <li><strong>Linha branca:</strong> 2 cm das laterais e fundo</li>
+                </ul>
+            </div>
+
+            <!-- Especificações da Bola -->
+            <div class="regra-card">
+                <div class="regra-titulo">
+                    <span class="regra-icon"><i class="fas fa-circle"></i></span>
+                    Especificações da Bola
+                </div>
+                <ul class="regra-lista">
+                    <li><strong>Diâmetro:</strong> 40 mm (±1 mm)</li>
+                    <li><strong>Peso:</strong> 2,7 gramas (±0,01g)</li>
+                    <li><strong>Material:</strong> Celulóide ou plástico (não é madeira)</li>
+                    <li><strong>Cor:</strong> Branca ou amarela (opaca)</li>
+                    <li><strong>Propriedade:</strong> Rebote de aproximadamente 24 cm quando cai de 30 cm</li>
+                </ul>
+            </div>
+
+            <!-- Raquete -->
+            <div class="regra-card">
+                <div class="regra-titulo">
+                    <span class="regra-icon"><i class="fas fa-heart"></i></span>
+                    Especificações da Raquete
+                </div>
+                <ul class="regra-lista">
+                    <li><strong>Lâmina:</strong> Plana, rígida e retangular</li>
+                    <li><strong>Borrachas:</strong> Podem ser coladas em um ou ambos os lados</li>
+                    <li><strong>Cores:</strong> Lâmina deve ser de cor uniforme (madeira natural ou pintada)</li>
+                    <li><strong>Borrachas:</strong> Um lado deve ser vermelho, outro preto (ou vermelho)</li>
+                    <li><strong>Tamanho:</strong> Sem limite específico, mas deve ser funcional</li>
+                </ul>
+            </div>
+
+            <!-- Infrações -->
+            <div class="regra-card">
+                <div class="regra-titulo">
+                    <span class="regra-icon"><i class="fas fa-exclamation-triangle"></i></span>
+                    Infrações e Penalidades
+                </div>
+                <div class="regra-conteudo">
+                    <strong>Estão proibidos:</strong>
+                </div>
+                <ul class="regra-lista">
+                    <li>Tocar a bola com a mão, braço ou corpo</li>
+                    <li>Tocar a bola duas vezes consecutivas</li>
+                    <li>Bater a bola antes dela cruzar a rede</li>
+                    <li>Tocar a rede ou seus suportes durante o jogo</li>
+                    <li>Mover a mesa durante o jogo</li>
+                    <li>Bater a bola com a lateral da raquete (apenas o lado plano)</li>
+                </ul>
+            </div>
+
+            <!-- Técnicas Fundamentais -->
+            <div class="regra-card">
+                <div class="regra-titulo">
+                    <span class="regra-icon"><i class="fas fa-person-walking"></i></span>
+                    Técnicas Fundamentais
+                </div>
+                <ul class="regra-lista">
+                    <li><strong>Forehand:</strong> Bola batida do lado direito do corpo (para destros)</li>
+                    <li><strong>Backhand:</strong> Bola batida do lado esquerdo do corpo</li>
+                    <li><strong>Topspin:</strong> Impacto com rotação para cima</li>
+                    <li><strong>Backspin:</strong> Impacto com rotação para baixo</li>
+                    <li><strong>Loop:</strong> Movimento circular gerando topspin</li>
+                    <li><strong>Smash:</strong> Ataque ofensivo em bolas altas</li>
+                    <li><strong>Bloqueio:</strong> Devolução defensiva de topspin</li>
+                </ul>
+            </div>
+
+            <!-- Rede -->
+            <div class="regra-card">
+                <div class="regra-titulo">
+                    <span class="regra-icon"><i class="fas fa-border-none"></i></span>
+                    Regras da Rede
+                </div>
+                <ul class="regra-lista">
+                    <li>A rede deve estar 15,25 cm acima da mesa</li>
+                    <li>A bola deve passar sobre a rede para pontos válidos</li>
+                    <li>Se a bola toca a rede e passa para o otro lado, é ponto válido</li>
+                    <li><strong>Em caso de "let" (toque na rede no saque):</strong> O saque é repetido</li>
+                    <li>Tocar a rede ou seus suportes durante o jogo resulta em ponto para o oponente</li>
+                </ul>
+            </div>
+
+            <!-- Melhores Práticas -->
+            <div class="regra-card">
+                <div class="regra-titulo">
+                    <span class="regra-icon"><i class="fas fa-lightbulb"></i></span>
+                    Posicionamento e Postura
+                </div>
+                <ul class="regra-lista">
+                    <li>Os pés devem estar de acordo com o lado do corpo</li>
+                    <li>A bola deve estar sempre na altura dos olhos durante o jogo</li>
+                    <li>Os cotovelos devem estar próximos ao corpo para estabilidade</li>
+                    <li>A transferência de peso é essencial para aprimorar os golpes</li>
+                    <li>Manter distância apropriada da mesa para melhores condições de jogo</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="footer-regras">
+            <p>
+                <i class="fas fa-info-circle"></i>
+                Para informações completas e atualizadas sobre as regras de tênis de mesa, visit the 
+                <a href="https://www.ittf.com" target="_blank">site oficial da ITTF</a><br>
+                © International Table Tennis Federation - ITTF
+            </p>
+        </div>
+    </div>
+{% endblock %}

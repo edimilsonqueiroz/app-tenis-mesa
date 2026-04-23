@@ -1,0 +1,422 @@
+{% extends "base.html" %}
+
+{% block title %}Placar - Tênis de Mesa{% endblock %}
+
+{% block meta %}
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0b0b0b">
+{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/placar_mesa.css') }}">
+{% endblock %}
+
+{% block content %}
+    <div class="header-info">
+        <div class="header-left">
+            <button class="voltar-btn" onclick="voltarAtras()"><i class="fas fa-arrow-left"></i> Voltar</button>
+            <div class="mesa-info"><i class="fas fa-table-tennis-paddle-ball" style="color: #00c9a7; margin-right: 12px;"></i>Mesa <span id="mesa-numero">--</span></div>
+            <div class="status-info"><i class="fas fa-signal" style="color: #00c9a7; margin-right: 8px;"></i>Placar em Tempo Real</div>
+        </div>
+        <div class="header-right">
+            <button class="fullscreen-btn" onclick="toggleFullscreen()" id="fullscreen-btn"><i class="fas fa-expand"></i></button>
+        </div>
+    </div>
+
+    <div class="sets-info">
+        <div class="set-block">
+            <div class="set-label">SET</div>
+            <div class="set-number" id="set-numero">1</div>
+        </div>
+        <div class="set-block">
+            <div class="set-label" id="set-label-time1">LADO 1 - SETS</div>
+            <div class="set-number" id="sets-time1">0</div>
+        </div>
+        <div class="set-block">
+            <div class="set-label" id="set-label-time2">LADO 2 - SETS</div>
+            <div class="set-number" id="sets-time2">0</div>
+        </div>
+    </div>
+
+    <div class="placar-wrapper">
+        <div class="placar-display">
+            <div class="time-block">
+                <div class="jogadores-header">
+                    <div class="jogadores-nome" id="time1-nome">
+                        <div class="jogador-principal">TIME 1</div>
+                    </div>
+                </div>
+                <div class="pontos" id="pontos-1">0</div>
+                <div class="sacador-indicator" id="sacador-time1">
+                    <span class="sacador-dot"></span>
+                    <span class="sacador-text">Sacando</span>
+                </div>
+            </div>
+
+            <div class="divisor-placar">×</div>
+
+            <div class="time-block">
+                <div class="jogadores-header">
+                    <div class="jogadores-nome" id="time2-nome">
+                        <div class="jogador-principal">TIME 2</div>
+                    </div>
+                </div>
+                <div class="pontos" id="pontos-2">0</div>
+                <div class="sacador-indicator" id="sacador-time2">
+                    <span class="sacador-dot"></span>
+                    <span class="sacador-text">Sacando</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="rodape-info">
+        <div class="time-jogadores">
+            <div id="list-time1"></div>
+        </div>
+        <div class="time-jogadores">
+            <div id="list-time2"></div>
+        </div>
+    </div>
+
+    <button class="fullscreen-exit-mobile" onclick="toggleFullscreen()" id="fullscreen-exit-mobile" title="Sair do modo tela cheia">
+        <i class="fas fa-compress"></i>
+    </button>
+
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <script>
+        const mesaId = {{ mesa_id }};
+        console.log('Mesa ID:', mesaId);
+        let socket = io();
+        let campeonatoId = {% if campeonato_id %}{{ campeonato_id }}{% else %}null{% endif %};
+        console.log('Campeonato ID:', campeonatoId);
+        let placarAnterior = null;
+        let ladosInvertidos = false;
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
+            || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+        let modoFullscreenSimulado = false;
+
+        function getTimeNoLado(lado) {
+            return ladosInvertidos ? (lado === 1 ? 2 : 1) : lado;
+        }
+
+        function renderizarJogadoresPorLado(mesa, placar) {
+            ladosInvertidos = !!(placar && placar.lados_invertidos);
+
+            const timeNoLado1 = getTimeNoLado(1);
+            const timeNoLado2 = getTimeNoLado(2);
+            const jogadoresLado1 = mesa.jogadores.filter(j => j.time === timeNoLado1);
+            const jogadoresLado2 = mesa.jogadores.filter(j => j.time === timeNoLado2);
+
+            const time1Nome = document.getElementById('time1-nome');
+            const time2Nome = document.getElementById('time2-nome');
+
+            const nomeLado1 = jogadoresLado1.length > 0
+                ? jogadoresLado1.map(j => j.nome.toUpperCase()).join(' & ')
+                : `TIME ${timeNoLado1}`;
+            const nomeLado2 = jogadoresLado2.length > 0
+                ? jogadoresLado2.map(j => j.nome.toUpperCase()).join(' & ')
+                : `TIME ${timeNoLado2}`;
+
+            const setLabelTime1 = document.getElementById('set-label-time1');
+            const setLabelTime2 = document.getElementById('set-label-time2');
+            if (setLabelTime1) setLabelTime1.textContent = `${nomeLado1} - SETS`;
+            if (setLabelTime2) setLabelTime2.textContent = `${nomeLado2} - SETS`;
+
+            time1Nome.innerHTML = `<div class="jogador-principal">${nomeLado1}</div>`;
+            time2Nome.innerHTML = `<div class="jogador-principal">${nomeLado2}</div>`;
+
+            const listTime1 = document.getElementById('list-time1');
+            const listTime2 = document.getElementById('list-time2');
+            const servidorTime = placar ? placar.servidor_time : null;
+
+            listTime1.innerHTML = jogadoresLado1.length > 0
+                ? jogadoresLado1.map(j => `<div class="jogador-item ${servidorTime === timeNoLado1 ? 'sacando' : ''}">${j.nome}</div>`).join('')
+                : '<div class="jogador-item" style="color: #666;">Sem jogadores</div>';
+
+            listTime2.innerHTML = jogadoresLado2.length > 0
+                ? jogadoresLado2.map(j => `<div class="jogador-item ${servidorTime === timeNoLado2 ? 'sacando' : ''}">${j.nome}</div>`).join('')
+                : '<div class="jogador-item" style="color: #666;">Sem jogadores</div>';
+        }
+
+        socket.on('connect', function() {
+            console.log('Conectado ao servidor. Mesa ID:', mesaId);
+            console.log('Inscrevendo na mesa...');
+            socket.emit('inscrever_mesa', { mesa_id: mesaId });
+            carregarMesa();
+        });
+
+        socket.on('placar_atualizado', function(data) {
+            console.log('🔔 Evento placar_atualizado recebido:', data);
+            const ladosAntes = placarAnterior ? !!placarAnterior.lados_invertidos : ladosInvertidos;
+            atualizarDisplay(data.placar);
+            const ladosDepois = !!data.placar.lados_invertidos;
+
+            if (ladosAntes !== ladosDepois) {
+                sincronizarMesa();
+            }
+        });
+
+        socket.on('resposta', function(data) {
+            console.log('📨 Resposta do servidor:', data);
+        });
+
+        // Escutar atualizações de jogadores via WebSocket (sem polling)
+        socket.on('jogadores_atualizados', function(data) {
+            console.log('👥 Jogadores atualizados via WebSocket');
+            sincronizarMesa();
+        });
+
+        socket.on('mesa_atualizada', function(data) {
+            console.log('🔄 Mesa atualizada via WebSocket');
+            sincronizarMesa();
+        });
+
+        function sincronizarMesa() {
+            fetch(`/api/mesas/${mesaId}`)
+                .then(response => {
+                    if (!response.ok) throw new Error('Erro ao carregar mesa');
+                    return response.json();
+                })
+                .then(mesa => {
+                    renderizarJogadoresPorLado(mesa, mesa.placar || null);
+
+                    if (mesa.placar) {
+                        atualizarDisplay(mesa.placar);
+                    }
+                })
+                .catch(error => console.error('Erro na sincronização:', error));
+        }
+
+        setTimeout(() => {
+            const mesaNumero = document.getElementById('mesa-numero');
+            if (mesaNumero && mesaNumero.textContent === '--') {
+                console.log('Socket não conectou a tempo, carregando mesa...');
+                carregarMesa();
+            }
+        }, 1500);
+
+        function carregarMesa() {
+            console.log('Carregando mesa:', mesaId);
+            fetch(`/api/mesas/${mesaId}`)
+                .then(response => {
+                    if (!response.ok) throw new Error('Erro ao carregar mesa');
+                    return response.json();
+                })
+                .then(mesa => {
+                    console.log('Mesa carregada:', mesa);
+                    campeonatoId = mesa.campeonato_id;
+                    document.getElementById('mesa-numero').textContent = mesa.numero;
+
+                    renderizarJogadoresPorLado(mesa, mesa.placar || null);
+
+                    const placar = mesa.placar || { pontos_time1: 0, pontos_time2: 0 };
+                    atualizarDisplay(placar);
+                })
+                .catch(error => {
+                    console.error('Erro ao carregar mesa:', error);
+                    document.getElementById('mesa-numero').textContent = 'Erro';
+                });
+        }
+
+        function atualizarDisplay(placar) {
+            ladosInvertidos = !!placar.lados_invertidos;
+            const timeNoLado1 = getTimeNoLado(1);
+            const timeNoLado2 = getTimeNoLado(2);
+
+            const el1 = document.getElementById('pontos-1');
+            const el2 = document.getElementById('pontos-2');
+            if (el1) el1.textContent = timeNoLado1 === 1 ? placar.pontos_time1 : placar.pontos_time2;
+            if (el2) el2.textContent = timeNoLado2 === 1 ? placar.pontos_time1 : placar.pontos_time2;
+
+            // Atualiza informações de sets
+            document.getElementById('set-numero').textContent = placar.set_numero || 1;
+            document.getElementById('sets-time1').textContent = timeNoLado1 === 1 ? (placar.sets_time1 || 0) : (placar.sets_time2 || 0);
+            document.getElementById('sets-time2').textContent = timeNoLado2 === 1 ? (placar.sets_time1 || 0) : (placar.sets_time2 || 0);
+
+            // Atualiza indicador de Sacando
+            const sacadorTime1 = document.getElementById('sacador-time1');
+            const sacadorTime2 = document.getElementById('sacador-time2');
+
+            console.log('[DEBUG] Atualizando indicador - servidor_time:', placar.servidor_time);
+            console.log('[DEBUG] sacadorTime1:', sacadorTime1, 'sacadorTime2:', sacadorTime2);
+
+            if (placar.servidor_time === timeNoLado1 || placar.servidor_time == timeNoLado1) {
+                if (sacadorTime1) {
+                    sacadorTime1.classList.add('ativo');
+                    console.log('[DEBUG] Lado 1 sacando - classe adicionada');
+                }
+                if (sacadorTime2) sacadorTime2.classList.remove('ativo');
+            } else if (placar.servidor_time === timeNoLado2 || placar.servidor_time == timeNoLado2) {
+                if (sacadorTime1) sacadorTime1.classList.remove('ativo');
+                if (sacadorTime2) {
+                    sacadorTime2.classList.add('ativo');
+                    console.log('[DEBUG] Lado 2 sacando - classe adicionada');
+                }
+            } else {
+                console.log('[DEBUG] servidor_time não é 1 nem 2, é:', placar.servidor_time, typeof placar.servidor_time);
+            }
+
+            // Também atualiza o indicador de sacando no rodapé
+            const jogadoresListTime1 = document.querySelectorAll('#list-time1 .jogador-item');
+            const jogadoresListTime2 = document.querySelectorAll('#list-time2 .jogador-item');
+
+            jogadoresListTime1.forEach(el => {
+                if (placar.servidor_time === timeNoLado1) {
+                    el.classList.add('sacando');
+                } else {
+                    el.classList.remove('sacando');
+                }
+            });
+
+            jogadoresListTime2.forEach(el => {
+                if (placar.servidor_time === timeNoLado2) {
+                    el.classList.add('sacando');
+                } else {
+                    el.classList.remove('sacando');
+                }
+            });
+
+            console.log(`[PLACAR] Servidor: Time ${placar.servidor_time}, Pontos: ${placar.pontos_time1}x${placar.pontos_time2}`);
+
+            // Salva o estado atual para próxima comparação
+            placarAnterior = JSON.parse(JSON.stringify(placar));
+        }
+
+        function voltarAtras() {
+            if (campeonatoId && campeonatoId !== null && !isNaN(campeonatoId)) {
+                window.location.href = `/campeonato/${campeonatoId}`;
+            } else {
+                window.location.href = '/';
+            }
+        }
+
+        function getFullscreenElementAtual() {
+            return document.fullscreenElement || document.webkitFullscreenElement || null;
+        }
+
+        function atualizarUIFullscreen() {
+            const btn = document.getElementById('fullscreen-btn');
+            const emFullscreenNativo = !!getFullscreenElementAtual();
+            const ativo = emFullscreenNativo || modoFullscreenSimulado;
+
+            if (btn) {
+                btn.innerHTML = ativo
+                    ? '<i class="fas fa-compress"></i>'
+                    : '<i class="fas fa-expand"></i>';
+            }
+
+            document.body.classList.toggle('placar-only-mode', ativo);
+        }
+
+        function minimizarBarraNavegadorIOS() {
+            // iOS Safari não remove URL bar por API em aba normal;
+            // este scroll ajuda a minimizar a barra quando possível.
+            window.scrollTo(0, 1);
+            setTimeout(() => window.scrollTo(0, 1), 120);
+            setTimeout(() => window.scrollTo(0, 1), 320);
+        }
+
+        function ativarModoSimuladoIOS() {
+            modoFullscreenSimulado = true;
+            document.documentElement.classList.add('ios-immersive');
+            document.body.classList.add('ios-immersive');
+            atualizarUIFullscreen();
+            minimizarBarraNavegadorIOS();
+        }
+
+        function desativarModoSimuladoIOS() {
+            modoFullscreenSimulado = false;
+            document.documentElement.classList.remove('ios-immersive');
+            document.body.classList.remove('ios-immersive');
+            atualizarUIFullscreen();
+        }
+
+        async function entrarFullscreenNativo(elem) {
+            if (elem.requestFullscreen) {
+                await elem.requestFullscreen();
+                return true;
+            }
+
+            if (elem.webkitRequestFullscreen) {
+                elem.webkitRequestFullscreen();
+                return true;
+            }
+
+            return false;
+        }
+
+        function sairFullscreenNativo() {
+            if (document.exitFullscreen) {
+                return document.exitFullscreen();
+            }
+
+            if (document.webkitExitFullscreen) {
+                document.webkitExitFullscreen();
+            }
+        }
+
+        async function toggleFullscreen() {
+            const elem = document.documentElement;
+
+            if (!getFullscreenElementAtual() && !modoFullscreenSimulado) {
+                try {
+                    const entrou = await entrarFullscreenNativo(elem);
+                    if (!entrou && isIOS) {
+                        ativarModoSimuladoIOS();
+                    }
+                } catch (error) {
+                    if (isIOS) {
+                        ativarModoSimuladoIOS();
+                    } else {
+                        console.warn('Não foi possível entrar em fullscreen:', error);
+                    }
+                }
+            } else {
+                if (modoFullscreenSimulado) {
+                    desativarModoSimuladoIOS();
+                } else {
+                    sairFullscreenNativo();
+                }
+            }
+
+            atualizarUIFullscreen();
+        }
+
+        document.addEventListener('fullscreenchange', atualizarUIFullscreen);
+        document.addEventListener('webkitfullscreenchange', atualizarUIFullscreen);
+        window.addEventListener('orientationchange', () => {
+            if (modoFullscreenSimulado) minimizarBarraNavegadorIOS();
+        });
+        window.addEventListener('resize', () => {
+            if (modoFullscreenSimulado) minimizarBarraNavegadorIOS();
+        });
+
+        // Auto fullscreen em mobile/tablet: mostra overlay pedindo toque
+        (function() {
+            const isMobile = /Android|iPhone|iPad|iPod|tablet|mobile/i.test(navigator.userAgent) || window.innerWidth <= 1024;
+            if (isMobile && !getFullscreenElementAtual()) {
+                const overlay = document.createElement('div');
+                overlay.id = 'fullscreen-overlay';
+                overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.92);z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;-webkit-tap-highlight-color:transparent;';
+                overlay.innerHTML = `
+                    <i class="fas fa-expand" style="font-size:64px;color:#00c9a7;margin-bottom:24px;"></i>
+                    <div style="color:white;font-size:22px;font-weight:700;margin-bottom:12px;">Toque para tela cheia</div>
+                    <div style="color:#aaa;font-size:14px;">No iPhone, abra pelo botão compartilhar > Adicionar à Tela de Início para remover a barra de URL</div>
+                `;
+                overlay.addEventListener('click', async function() {
+                    await toggleFullscreen();
+                    overlay.remove();
+                });
+                document.body.appendChild(overlay);
+            }
+        })();
+
+        atualizarUIFullscreen();
+    </script>
+{% endblock %}

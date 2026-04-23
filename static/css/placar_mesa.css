@@ -1,0 +1,569 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&display=swap');
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background: #1a1a1a;
+    color: #ffffff;
+    font-family: 'Roboto Mono', monospace;
+    height: 100vh;
+    width: 100vw;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+html.ios-immersive,
+body.ios-immersive {
+    height: 100dvh;
+    min-height: 100dvh;
+}
+
+body.placar-only-mode {
+    background: #0b0b0b;
+}
+
+body.placar-only-mode .header-info,
+body.placar-only-mode .rodape-info {
+    display: none;
+}
+
+body.placar-only-mode .sets-info {
+    padding: 10px 20px;
+}
+
+body.placar-only-mode .placar-wrapper {
+    padding: 0;
+}
+
+.fullscreen-exit-mobile {
+    position: fixed;
+    top: max(10px, env(safe-area-inset-top));
+    right: max(10px, env(safe-area-inset-right));
+    width: 42px;
+    height: 42px;
+    border: none;
+    border-radius: 999px;
+    background: rgba(0, 0, 0, 0.65);
+    color: #fff;
+    z-index: 100000;
+    display: none;
+    cursor: pointer;
+}
+
+body.placar-only-mode .fullscreen-exit-mobile {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.voltar-btn {
+    position: relative;
+    top: auto;
+    left: auto;
+    padding: 6px 12px;
+    background: rgba(255, 59, 48, 0.85);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    z-index: 50;
+    font-size: 11px;
+    transition: all 0.3s ease;
+}
+
+.voltar-btn:hover {
+    background: rgba(255, 59, 48, 1);
+    transform: translateY(-2px);
+}
+
+.fullscreen-btn {
+    padding: 6px 12px;
+    background: rgba(0, 201, 167, 0.85);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    z-index: 50;
+    font-size: 11px;
+    transition: all 0.3s ease;
+    margin-left: 12px;
+}
+
+.fullscreen-btn:hover {
+    background: rgba(0, 201, 167, 1);
+    transform: translateY(-2px);
+}
+
+.header-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 30px;
+    background: linear-gradient(135deg, #0a0a0a 0%, rgba(0, 102, 204, 0.08) 100%);
+    border-bottom: 3px solid #00c9a7;
+    position: relative;
+    flex-shrink: 0;
+    gap: 20px;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.mesa-info {
+    font-size: 16px;
+    font-weight: 700;
+    color: #00c9a7;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    flex: 0 0 auto;
+}
+
+.status-info {
+    font-size: 11px;
+    color: #aaa;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.sets-info {
+    display: flex;
+    justify-content: center;
+    gap: 80px;
+    padding: 20px 30px;
+    background: rgba(0, 0, 0, 0.3);
+    border-bottom: 1px solid rgba(0, 201, 167, 0.2);
+    flex-shrink: 0;
+}
+
+.set-block {
+    text-align: center;
+}
+
+.set-label {
+    font-size: 18px;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+    font-weight: 600;
+}
+
+.set-number {
+    font-size: 48px;
+    font-weight: 700;
+    color: #00c9a7;
+}
+
+.placar-wrapper {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.placar-display {
+    display: flex;
+    align-items: center;
+    gap: 50px;
+    width: 100%;
+}
+
+.time-block {
+    flex: 1;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.jogadores-header {
+    margin-bottom: 20px;
+    min-height: 40px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.jogadores-nome {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 40px;
+}
+
+.jogador-principal {
+    font-size: 34px;
+    font-weight: 700;
+    color: #00c9a7;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.sacador-indicator {
+    display: none;
+    margin-top: 10px;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+}
+
+.sacador-indicator.ativo {
+    display: flex;
+}
+
+.sacador-dot {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    background: #ff3b30;
+    border-radius: 50%;
+    animation: blink 0.8s ease-in-out infinite;
+    box-shadow: 0 0 8px rgba(255, 59, 48, 0.8);
+}
+
+.sacador-text {
+    font-size: 10px;
+    color: #ff3b30;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+}
+
+@keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
+
+.pontos {
+    font-size: 220px;
+    font-weight: 900;
+    color: #00c9a7;
+    line-height: 1;
+    text-shadow: 0 0 20px rgba(0, 201, 167, 0.5);
+    font-family: 'Courier New', monospace;
+}
+
+.divisor-placar {
+    font-size: 130px;
+    color: rgba(0, 201, 167, 0.3);
+    font-weight: bold;
+    margin: 0 30px;
+}
+
+.rodape-info {
+    display: flex;
+    justify-content: space-around;
+    padding: 16px 30px;
+    background: linear-gradient(135deg, rgba(0, 0, 0, 0.4), rgba(0, 102, 204, 0.05));
+    border-top: 1px solid rgba(0, 201, 167, 0.2);
+    flex-shrink: 0;
+    gap: 50px;
+}
+
+.time-jogadores {
+    flex: 1;
+}
+
+.time-label {
+    font-size: 12px;
+    color: #00c9a7;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+
+.jogador-item {
+    font-size: 20px;
+    font-weight: 600;
+    padding: 8px 12px;
+    color: #ccc;
+    margin: 3px 0;
+}
+
+.jogador-item.sacando {
+    background: rgba(255, 59, 48, 0.2);
+    color: #ff6b6b;
+    font-weight: 600;
+    border-left: 3px solid #ff3b30;
+    padding-left: 8px;
+}
+
+/* Landscape mode - garante que nomes apareçam */
+@media (max-height: 500px) {
+    .header-info {
+        padding: 4px 20px;
+        gap: 12px;
+    }
+
+    .sets-info {
+        padding: 8px 15px;
+        gap: 35px;
+    }
+
+    .set-label {
+        font-size: 13px;
+        margin-bottom: 3px;
+    }
+
+    .set-number {
+        font-size: 32px;
+    }
+
+    .placar-wrapper {
+        padding: 4px;
+        min-height: 0;
+    }
+
+    .placar-display {
+        gap: 20px;
+    }
+
+    .time-block {
+        gap: 0px;
+    }
+
+    .jogadores-header {
+        min-height: auto;
+        margin-bottom: 0;
+        overflow: visible;
+    }
+
+    .jogadores-nome {
+        min-height: auto;
+        overflow: visible;
+        display: block;
+        margin-bottom: 1px;
+    }
+
+    .jogador-principal {
+        font-size: 24px;
+        margin: 0;
+        padding: 0;
+        line-height: 1;
+    }
+
+    .sacador-indicator {
+        margin-top: 1px;
+        font-size: 8px;
+    }
+
+    .sacador-dot {
+        width: 8px;
+        height: 8px;
+    }
+
+    .pontos {
+        font-size: 110px;
+        line-height: 0.85;
+        margin-top: 0;
+    }
+
+    .divisor-placar {
+        font-size: 75px;
+    }
+
+    .status-info {
+        display: none;
+    }
+
+    .mesa-info {
+        font-size: 13px;
+    }
+}
+
+@media (max-width: 1024px) {
+    .placar-display {
+        gap: 30px;
+    }
+
+    .jogadores-header {
+        min-height: 38px;
+    }
+
+    .jogadores-nome {
+        min-height: 38px;
+    }
+
+    .pontos {
+        font-size: 160px;
+    }
+
+    .divisor-placar {
+        font-size: 95px;
+        margin: 0 20px;
+    }
+}
+
+@media (max-width: 768px) {
+    .header-info {
+        padding: 6px 15px;
+        gap: 12px;
+    }
+
+    .header-left {
+        gap: 12px;
+    }
+
+    .voltar-btn {
+        padding: 5px 10px;
+        font-size: 10px;
+    }
+
+    .mesa-info {
+        font-size: 14px;
+    }
+
+    .jogadores-header {
+        min-height: 35px;
+    }
+
+    .jogadores-nome {
+        min-height: 35px;
+    }
+
+    .jogador-principal {
+        font-size: 24px;
+    }
+
+    .jogador-item {
+        font-size: 16px;
+    }
+
+    .placar-display {
+        gap: 20px;
+    }
+
+    .pontos {
+        font-size: 120px;
+    }
+
+    .divisor-placar {
+        font-size: 75px;
+        margin: 0 15px;
+    }
+
+    .sets-info {
+        gap: 50px;
+        padding: 18px 25px;
+    }
+
+    .set-label {
+        font-size: 16px;
+    }
+
+    .set-number {
+        font-size: 40px;
+    }
+}
+
+@media (max-width: 480px) {
+    .header-info {
+        padding: 6px 12px;
+        gap: 10px;
+    }
+
+    .header-left {
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .voltar-btn {
+        padding: 4px 8px;
+        font-size: 10px;
+    }
+
+    .mesa-info {
+        font-size: 12px;
+    }
+
+    .status-info {
+        display: none;
+    }
+
+    .placar-display {
+        gap: 10px;
+    }
+
+    .pontos {
+        font-size: 70px;
+    }
+
+    .divisor-placar {
+        font-size: 40px;
+        margin: 0 10px;
+    }
+
+    .jogador-principal {
+        font-size: 18px;
+    }
+
+    .jogador-item {
+        font-size: 14px;
+    }
+
+    .jogadores-nome {
+        min-height: 30px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .sacador-indicator {
+        margin-top: 4px;
+    }
+
+    .placar-wrapper {
+        padding: 10px;
+    }
+
+    .rodape-info {
+        flex-direction: column;
+        gap: 15px;
+        padding: 12px 15px;
+    }
+
+    body.placar-only-mode .sets-info {
+        gap: 24px;
+        padding: 8px 10px;
+    }
+
+    body.placar-only-mode .set-label {
+        font-size: 12px;
+    }
+
+    body.placar-only-mode .set-number {
+        font-size: 28px;
+    }
+
+    body.placar-only-mode .pontos {
+        font-size: 30vw;
+    }
+}

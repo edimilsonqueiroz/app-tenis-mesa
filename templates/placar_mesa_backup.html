@@ -1,0 +1,1290 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Placar - Tênis de Mesa</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&display=swap');
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background: #1a1a1a;
+            color: #ffffff;
+            font-family: 'Roboto Mono', monospace;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .voltar-btn {
+            position: relative;
+            top: auto;
+            left: auto;
+            padding: 6px 12px;
+            background: rgba(255, 59, 48, 0.85);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            z-index: 50;
+            font-size: 11px;
+            transition: all 0.3s ease;
+            flex-shrink: 0;
+            margin-right: 12px;
+        }
+
+        .voltar-btn:hover {
+            background: rgba(255, 59, 48, 1);
+            transform: translateY(-2px);
+        }
+
+        .fullscreen-btn {
+            padding: 6px 12px;
+            background: rgba(0, 201, 167, 0.85);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            z-index: 50;
+            font-size: 11px;
+            transition: all 0.3s ease;
+            margin-left: auto;
+        }
+
+        .fullscreen-btn:hover {
+            background: rgba(0, 201, 167, 1);
+            transform: translateY(-2px);
+        }
+
+        .fullscreen-btn:active {
+            transform: scale(0.95);
+        }
+
+        .header-info {
+            display: flex;
+            justify-content: flex-start;
+            align-items: center;
+            padding: 8px 30px;
+            background: linear-gradient(135deg, #0a0a0a 0%, rgba(0, 102, 204, 0.08) 100%);
+            border-bottom: 3px solid #00c9a7;
+            position: relative;
+            flex-shrink: 0;
+            gap: 20px;
+        }
+
+        .mesa-info {
+            font-size: 16px;
+            font-weight: 700;
+            color: #00c9a7;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            flex: 0 0 auto;
+        }
+
+        .status-info {
+            font-size: 11px;
+            color: #aaa;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            flex: 1;
+            text-align: center;
+        }
+
+        .placar-wrapper {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 10px 30px;
+            background: linear-gradient(180deg, #1a1a1a 0%, #0f0f0f 100%);
+            min-height: 0;
+        }
+
+        .placar-display {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0;
+            width: 100%;
+        }
+
+        .time-block {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .pontos {
+            font-size: 220px;
+            font-weight: 700;
+            line-height: 1;
+            color: #00c9a7;
+            text-shadow: 0 0 20px rgba(0, 201, 167, 0.5),
+                         0 0 40px rgba(0, 201, 167, 0.3);
+            font-family: 'Courier New', monospace;
+            letter-spacing: 10px;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .jogadores-header {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            width: 100%;
+        }
+
+        .jogadores-nome {
+            text-align: center;
+            max-width: 350px;
+            background: linear-gradient(135deg, rgba(0, 201, 167, 0.2), rgba(0, 102, 204, 0.2));
+            padding: 6px 20px;
+            border-radius: 10px;
+            border: 2px solid rgba(0, 201, 167, 0.4);
+            backdrop-filter: blur(10px);
+            width: 100%;
+        }
+
+        .jogador-principal {
+            font-size: 36px;
+            font-weight: 700;
+            color: #ffffff;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            margin: 0;
+            line-height: 1.2;
+        }
+
+        .jogador-secundario {
+            font-size: 24px;
+            color: #00c9a7;
+            margin-top: 2px;
+        }
+
+        .divisor-placar {
+            font-size: 80px;
+            color: rgba(0, 201, 167, 0.3);
+            font-weight: 300;
+            line-height: 1;
+            margin: 0 50px;
+            opacity: 0.6;
+        }
+
+        .rodape-info {
+            padding: 8px 30px;
+            background: linear-gradient(135deg, #0a0a0a 0%, rgba(0, 102, 204, 0.05) 100%);
+            border-top: 3px solid #00c9a7;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            text-align: center;
+            flex-shrink: 0;
+            overflow: hidden;
+        }
+
+        .sets-info {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 50px;
+            padding: 8px 30px;
+            background: rgba(0, 201, 167, 0.05);
+            border-bottom: 2px solid rgba(0, 201, 167, 0.2);
+            flex-shrink: 0;
+        }
+
+        .set-block {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+        }
+
+        .set-label {
+            font-size: 18px;
+            color: #00c9a7;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+        }
+
+        .set-number {
+            font-size: 48px;
+            font-weight: 700;
+            color: #ffffff;
+            min-width: 60px;
+            text-align: center;
+            line-height: 1;
+        }
+
+        .servidor-info {
+            display: none !important;
+        }
+
+        .sacador-indicator {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            color: #ff9800;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .sacador-dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background: #ff9800;
+            border-radius: 50%;
+            animation: pulsarBolinha 1s infinite;
+        }
+
+        @keyframes pulsarBolinha {
+            0%, 100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+            50% {
+                opacity: 0.4;
+                transform: scale(1.3);
+            }
+        }
+
+        .sacador-text {
+            flex-shrink: 0;
+        }
+
+        @keyframes setTransition {
+            0% {
+                transform: scale(1);
+                color: #ffffff;
+            }
+            50% {
+                transform: scale(1.2);
+                color: #00c9a7;
+            }
+            100% {
+                transform: scale(1);
+                color: #ffffff;
+            }
+        }
+
+        .servidor-label {
+            font-size: 9px;
+            color: #ff9800;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+        }
+
+        .time-jogadores {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+
+        .time-jogadores-inline {
+            display: flex;
+            flex-direction: row;
+            gap: 20px;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .sacador-badge {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #ff9800;
+            box-shadow: 0 0 8px rgba(255, 152, 0, 0.6);
+            animation: pulse 0.8s infinite;
+            margin-left: 6px;
+        }
+
+        .time-label {
+            font-size: 9px;
+            color: #00c9a7;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 700;
+            margin-bottom: 2px;
+        }
+
+        .jogador-item {
+            font-size: 10px;
+            color: #e0e0e0;
+            padding: 3px 8px;
+            border-left: 2px solid #00c9a7;
+            background: rgba(0, 201, 167, 0.08);
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .jogador-item.sacando {
+            background: rgba(255, 152, 0, 0.15);
+            border-left-color: #ff9800;
+            color: #fff;
+        }
+
+        .jogador-item.sacando::before {
+            content: '';
+            display: inline-block;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #ff9800;
+            box-shadow: 0 0 6px rgba(255, 152, 0, 0.8);
+            animation: pulse 0.8s infinite;
+        }
+
+        @media (max-width: 1600px) {
+            .pontos {
+                font-size: 240px;
+                letter-spacing: 8px;
+            }
+
+            .divisor-placar {
+                font-size: 160px;
+                margin: 0 40px;
+            }
+
+            .jogador-principal {
+                font-size: 28px;
+            }
+
+            .jogador-secundario {
+                font-size: 18px;
+            }
+
+            .set-label {
+                font-size: 18px;
+            }
+
+            .set-number {
+                font-size: 48px;
+            }
+        }
+
+        @media (max-width: 1200px) {
+            .pontos {
+                font-size: 180px;
+                letter-spacing: 6px;
+            }
+
+            .divisor-placar {
+                font-size: 120px;
+                margin: 0 30px;
+            }
+
+            .header-info {
+                padding: 12px 20px;
+            }
+
+            .rodape-info {
+                padding: 12px 20px;
+                gap: 20px;
+            }
+
+            .mesa-info {
+                font-size: 16px;
+            }
+
+            .jogador-principal {
+                font-size: 28px;
+            }
+
+            .jogador-secundario {
+                font-size: 18px;
+            }
+
+            .set-label {
+                font-size: 16px;
+            }
+
+            .set-number {
+                font-size: 40px;
+            }
+        }
+
+        @media (max-width: 1024px) {
+            .header-info {
+                padding: 12px 20px;
+                padding-left: 20px;
+                gap: 20px;
+                flex-direction: row;
+                align-items: center;
+                min-height: auto;
+            }
+
+            .mesa-info {
+                flex: 0 0 auto;
+            }
+
+            .status-info {
+                flex: 0 0 auto;
+                margin-left: auto;
+            }
+
+            .pontos {
+                font-size: 180px;
+                letter-spacing: 6px;
+            }
+
+            .divisor-placar {
+                font-size: 130px;
+                margin: 0 25px;
+            }
+
+            .jogador-principal {
+                font-size: 26px;
+            }
+
+            .jogador-secundario {
+                font-size: 17px;
+            }
+
+            .rodape-info {
+                padding: 12px 20px;
+                grid-template-columns: 1fr 1fr;
+                gap: 25px;
+                min-height: auto;
+            }
+
+            .sets-info {
+                gap: 40px;
+                padding: 8px 20px;
+                min-height: auto;
+            }
+
+            .set-label {
+                font-size: 15px;
+            }
+
+            .set-number {
+                font-size: 36px;
+            }
+        }
+
+        @media (max-width: 900px) {
+            .header-info {
+                padding: 12px 15px;
+                padding-left: 15px;
+                flex-wrap: wrap;
+                justify-content: flex-start;
+                gap: 15px;
+                align-items: center;
+                min-height: auto;
+            }
+
+            .mesa-info {
+                flex: 0 0 auto;
+                font-size: 15px;
+            }
+
+            .status-info {
+                flex: 0 0 auto;
+                order: 3;
+                width: 100%;
+                font-size: 10px;
+            }
+
+            .fullscreen-btn {
+                margin-left: auto;
+                order: 2;
+            }
+
+            .pontos {
+                font-size: 160px;
+                letter-spacing: 5px;
+            }
+
+            .divisor-placar {
+                font-size: 115px;
+                margin: 0 20px;
+            }
+
+            .jogador-principal {
+                font-size: 24px;
+            }
+
+            .jogador-secundario {
+                font-size: 16px;
+            }
+
+            .time-label {
+                font-size: 10px;
+            }
+
+            .jogador-item {
+                font-size: 12px;
+            }
+
+            .rodape-info {
+                padding: 12px 15px;
+                grid-template-columns: 1fr 1fr;
+                gap: 20px;
+                min-height: auto;
+            }
+
+            .sets-info {
+                gap: 30px;
+                padding: 8px 15px;
+                min-height: auto;
+            }
+
+            .set-label {
+                font-size: 14px;
+            }
+
+            .set-number {
+                font-size: 32px;
+            }
+
+            .mesa-info {
+                font-size: 15px;
+            }
+
+            .status-info {
+                font-size: 10px;
+                order: 3;
+                width: 100%;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header-info {
+                flex-direction: row;
+                padding: 12px 15px;
+                padding-left: 15px;
+                gap: 15px;
+                align-items: center;
+                min-height: auto;
+                flex-wrap: wrap;
+                justify-content: flex-start;
+            }
+
+            .mesa-info {
+                flex: 0 0 auto;
+            }
+
+            .status-info {
+                flex: 0 0 auto;
+                margin-left: auto;
+            }
+
+            .fullscreen-btn {
+                margin-left: 10px;
+            }
+
+            .voltar-btn {
+                position: relative;
+                left: 0;
+                top: 0;
+                flex-shrink: 0;
+                margin-right: 8px;
+            }
+
+            .pontos {
+                font-size: 140px;
+                letter-spacing: 4px;
+            }
+
+            .divisor-placar {
+                font-size: 100px;
+                margin: 0 15px;
+            }
+
+            .jogadores-nome {
+                max-width: 200px;
+            }
+
+            .jogador-principal {
+                font-size: 22px;
+            }
+
+            .jogador-secundario {
+                font-size: 15px;
+            }
+
+            .rodape-info {
+                grid-template-columns: 1fr;
+                gap: 15px;
+                padding: 12px 15px;
+                min-height: auto;
+            }
+
+            .sets-info {
+                gap: 25px;
+                padding: 8px 15px;
+                justify-content: center;
+                flex-wrap: wrap;
+                min-height: auto;
+            }
+
+            .set-label {
+                font-size: 13px;
+            }
+
+            .set-number {
+                font-size: 30px;
+            }
+
+            .time-label {
+                font-size: 9px;
+            }
+
+            .jogador-item {
+                font-size: 11px;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .header-info {
+                flex-direction: column;
+                gap: 8px;
+                text-align: center;
+                padding: 10px 15px;
+                align-items: center;
+            }
+
+            .voltar-btn {
+                position: relative;
+                padding: 8px 16px;
+                font-size: 12px;
+                left: 0;
+                top: 0;
+                margin-bottom: 8px;
+            }
+
+            .pontos {
+                font-size: 120px;
+                letter-spacing: 4px;
+            }
+
+            .divisor-placar {
+                font-size: 85px;
+                margin: 0 15px;
+            }
+
+            .jogadores-nome {
+                max-width: 150px;
+            }
+
+            .rodape-info {
+                grid-template-columns: 1fr;
+                gap: 12px;
+                padding: 10px;
+            }
+
+            .jogador-principal {
+                font-size: 18px;
+            }
+
+            .jogador-secundario {
+                font-size: 12px;
+            }
+
+            .set-label {
+                font-size: 12px;
+            }
+
+            .set-number {
+                font-size: 24px;
+            }
+
+            .sets-info {
+                gap: 20px;
+                padding: 5px 15px;
+            }
+        }
+
+        @media (max-width: 400px) {
+            .pontos {
+                font-size: 90px;
+                letter-spacing: 3px;
+            }
+
+            .divisor-placar {
+                font-size: 65px;
+                margin: 0 10px;
+            }
+
+            .rodape-info {
+                font-size: 11px;
+                padding: 8px;
+            }
+
+            .header-info {
+                padding: 8px 10px;
+            }
+
+            .voltar-btn {
+                position: relative;
+                left: 0;
+                top: 0;
+                flex-shrink: 0;
+                padding: 6px 12px;
+                font-size: 11px;
+            }
+
+            .mesa-info {
+                font-size: 14px;
+            }
+
+            .status-info {
+                font-size: 10px;
+            }
+
+            .jogador-principal {
+                font-size: 14px;
+            }
+
+            .jogador-secundario {
+                font-size: 10px;
+            }
+
+            .set-label {
+                font-size: 10px;
+            }
+
+            .set-number {
+                font-size: 18px;
+            }
+        }
+
+        /* Landscape mode - tablet horizontal */
+        @media (max-height: 600px) {
+            .header-info {
+                padding: 6px 20px;
+                padding-left: 20px;
+                gap: 15px;
+                min-height: auto;
+                flex-direction: row;
+                align-items: center;
+            }
+
+            .voltar-btn {
+                position: relative;
+                top: auto;
+                left: auto;
+                padding: 6px 12px;
+                font-size: 11px;
+                margin-right: 10px;
+                flex-shrink: 0;
+            }
+
+            .mesa-info {
+                flex: 0 0 auto;
+                font-size: 14px;
+            }
+
+            .status-info {
+                flex: 1;
+                text-align: center;
+                font-size: 11px;
+                margin-left: auto;
+            }
+
+            .fullscreen-btn {
+                margin-left: auto;
+                flex-shrink: 0;
+            }
+
+            .pontos {
+                font-size: 120px;
+                letter-spacing: 4px;
+            }
+
+            .divisor-placar {
+                font-size: 95px;
+                margin: 0 15px;
+            }
+
+            .placar-wrapper {
+                padding: 5px 20px;
+            }
+
+            .sets-info {
+                gap: 30px;
+                padding: 4px 20px;
+            }
+
+            .set-number {
+                font-size: 28px;
+            }
+
+            .set-label {
+                font-size: 12px;
+            }
+
+            .rodape-info {
+                padding: 8px 20px;
+                gap: 20px;
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .time-jogadores {
+                flex-direction: row;
+                gap: 16px;
+                justify-content: center;
+                align-items: center;
+            }
+
+            .time-label {
+                display: none;
+            }
+
+            .jogador-item {
+                font-size: 12px;
+                padding: 4px 8px;
+                margin: 0;
+            }
+
+            .jogador-principal {
+                font-size: 16px;
+            }
+
+            .jogador-secundario {
+                font-size: 12px;
+            }
+        }
+
+        /* Very small height - extreme landscape */
+        @media (max-height: 500px) {
+            .header-info {
+                padding: 4px 15px;
+                padding-left: 15px;
+                flex-direction: row;
+                align-items: center;
+            }
+
+            .voltar-btn {
+                position: relative;
+                top: auto;
+                left: auto;
+                padding: 5px 10px;
+                font-size: 10px;
+                margin-right: 8px;
+                flex-shrink: 0;
+            }
+
+            .mesa-info {
+                flex: 0 0 auto;
+                font-size: 13px;
+            }
+
+            .status-info {
+                flex: 1;
+                text-align: center;
+                font-size: 10px;
+                margin-left: auto;
+            }
+
+            .fullscreen-btn {
+                margin-left: auto;
+                flex-shrink: 0;
+            }
+
+            .pontos {
+                font-size: 100px;
+                letter-spacing: 3px;
+            }
+
+            .divisor-placar {
+                font-size: 80px;
+                margin: 0 10px;
+            }
+
+            .placar-wrapper {
+                padding: 3px 15px;
+            }
+
+            .sets-info {
+                gap: 20px;
+                padding: 2px 15px;
+            }
+
+            .set-number {
+                font-size: 24px;
+            }
+
+            .set-label {
+                font-size: 10px;
+            }
+
+            .rodape-info {
+                padding: 6px 15px;
+                gap: 15px;
+            }
+
+            .time-jogadores {
+                flex-direction: row;
+                gap: 12px;
+            }
+
+            .time-label {
+                display: none;
+            }
+
+            .jogador-item {
+                font-size: 11px;
+                padding: 3px 6px;
+            }
+
+            .jogador-principal {
+                font-size: 13px;
+            }
+
+            .jogador-secundario {
+                font-size: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="voltar-btn" onclick="voltarAtras()"><i class="fas fa-arrow-left"></i> Voltar</button>
+
+    <div class="header-info">
+        <div class="mesa-info"><i class="fas fa-table-tennis-paddle-ball" style="color: #00c9a7; margin-right: 12px;"></i>Mesa <span id="mesa-numero">--</span></div>
+        <div class="status-info"><i class="fas fa-signal" style="color: #00c9a7; margin-right: 8px;"></i>Placar em Tempo Real</div>
+        <button class="fullscreen-btn" onclick="toggleFullscreen()" id="fullscreen-btn"><i class="fas fa-expand"></i></button>
+    </div>
+
+    <div class="sets-info">
+        <div class="set-block">
+            <div class="set-label">SET</div>
+            <div class="set-number" id="set-numero">1</div>
+        </div>
+        <div class="set-block">
+            <div class="set-label">TIME 1 - SETS</div>
+            <div class="set-number" id="sets-time1">0</div>
+        </div>
+        <div class="set-block">
+            <div class="set-label">TIME 2 - SETS</div>
+            <div class="set-number" id="sets-time2">0</div>
+        </div>
+    </div>
+
+    <!-- Removido: div.servidor-info com TIME 1 e TIME 2 -->
+
+    <div class="placar-wrapper">
+        <div class="placar-display">
+            <div class="time-block">
+                <div class="jogadores-header">
+                    <div class="jogadores-nome" id="time1-nome">
+                        <div class="jogador-principal">TIME 1</div>
+                        <div class="sacador-indicator" id="sacador-time1" style="display: none;">
+                            <span class="sacador-dot"></span>
+                            <span class="sacador-text">Sacando</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="pontos" id="pontos-1">0</div>
+            </div>
+
+            <div class="divisor-placar">×</div>
+
+            <div class="time-block">
+                <div class="jogadores-header">
+                    <div class="jogadores-nome" id="time2-nome">
+                        <div class="jogador-principal">TIME 2</div>
+                        <div class="sacador-indicator" id="sacador-time2" style="display: none;">
+                            <span class="sacador-dot"></span>
+                            <span class="sacador-text">Sacando</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="pontos" id="pontos-2">0</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="rodape-info">
+        <div class="time-jogadores">
+            <div class="time-label"><i class="fas fa-users" style="color: #00c9a7; margin-right: 8px;"></i>TIME 1</div>
+            <div id="list-time1"></div>
+        </div>
+        <div class="time-jogadores">
+            <div class="time-label"><i class="fas fa-users" style="color: #00c9a7; margin-right: 8px;"></i>TIME 2</div>
+            <div id="list-time2"></div>
+        </div>
+    </div>
+
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <script>
+        const mesaId = {{ mesa_id }};
+        console.log('Mesa ID:', mesaId);
+        let socket = io();
+        let campeonatoId = {% if campeonato_id %}{{ campeonato_id }}{% else %}null{% endif %};
+        console.log('Campeonato ID:', campeonatoId);
+        let placarAnterior = null;
+
+        socket.on('connect', function() {
+            console.log('Conectado ao servidor. Mesa ID:', mesaId);
+            console.log('Inscrevendo na mesa...');
+            socket.emit('inscrever_mesa', { mesa_id: mesaId });
+            carregarMesa();
+        });
+
+        socket.on('placar_atualizado', function(data) {
+            console.log('🔔 Evento placar_atualizado recebido:', data);
+            atualizarDisplay(data.placar);
+        });
+        });
+
+        socket.on('resposta', function(data) {
+            console.log('📨 Resposta do servidor:', data);
+        });
+
+        // Sincronização automática a cada 1 segundo
+        setInterval(function() {
+            fetch(`/api/mesas/${mesaId}`)
+                .then(response => {
+                    if (!response.ok) throw new Error('Erro ao carregar mesa');
+                    return response.json();
+                })
+                .then(mesa => {
+                    const time1Nome = document.getElementById('time1-nome');
+                    const time2Nome = document.getElementById('time2-nome');
+
+                    const jogadoresTime1 = mesa.jogadores.filter(j => j.time === 1);
+                    const jogadoresTime2 = mesa.jogadores.filter(j => j.time === 2);
+
+                    // Verificar se nomes mudaram
+                    const nomeAtualTime1 = time1Nome.querySelector('.jogador-principal')?.textContent || '';
+                    const novoNomeTime1 = jogadoresTime1.length > 0 
+                        ? jogadoresTime1.map(j => j.nome.toUpperCase()).join(' & ')
+                        : 'TIME 1';
+                    
+                    const nomeAtualTime2 = time2Nome.querySelector('.jogador-principal')?.textContent || '';
+                    const novoNomeTime2 = jogadoresTime2.length > 0 
+                        ? jogadoresTime2.map(j => j.nome.toUpperCase()).join(' & ')
+                        : 'TIME 2';
+                    
+                    // Se mudou, atualizar
+                    if (nomeAtualTime1 !== novoNomeTime1 || nomeAtualTime2 !== novoNomeTime2) {
+                        console.log('🔄 Atualização de jogadores detectada!');
+                        
+                        if (nomeAtualTime1 !== novoNomeTime1) {
+                            time1Nome.innerHTML = `<div class="jogador-principal">${novoNomeTime1}</div>`;
+                        }
+                        if (nomeAtualTime2 !== novoNomeTime2) {
+                            time2Nome.innerHTML = `<div class="jogador-principal">${novoNomeTime2}</div>`;
+                        }
+                        
+                        // Atualizar lista de jogadores no rodapé
+                        const listTime1 = document.getElementById('list-time1');
+                        const listTime2 = document.getElementById('list-time2');
+                        
+                        const servidorTime = mesa.placar ? mesa.placar.servidor_time : null;
+                        
+                        listTime1.innerHTML = jogadoresTime1.length > 0 
+                            ? jogadoresTime1.map(j => `<div class="jogador-item ${servidorTime === 1 ? 'sacando' : ''}">${j.nome}</div>`).join('')
+                            : '<div class="jogador-item" style="color: #666;">Sem jogadores</div>';
+                        
+                        listTime2.innerHTML = jogadoresTime2.length > 0 
+                            ? jogadoresTime2.map(j => `<div class="jogador-item ${servidorTime === 2 ? 'sacando' : ''}">${j.nome}</div>`).join('')
+                            : '<div class="jogador-item" style="color: #666;">Sem jogadores</div>';
+                    }
+                    
+                    // Também atualizar placar se houver mudanças
+                    if (mesa.placar) {
+                        const pontos1Atual = document.getElementById('pontos-1')?.textContent;
+                        const pontos2Atual = document.getElementById('pontos-2')?.textContent;
+                        
+                        if (pontos1Atual != mesa.placar.pontos_time1 || pontos2Atual != mesa.placar.pontos_time2) {
+                            atualizarDisplay(mesa.placar);
+                        }
+                    }
+                })
+                .catch(error => console.error('Erro na sincronização:', error));
+        }, 1000);
+        setTimeout(() => {
+            const mesaNumero = document.getElementById('mesa-numero');
+            if (mesaNumero && mesaNumero.textContent === '--') {
+                console.log('Socket não conectou a tempo, carregando mesa...');
+                carregarMesa();
+            }
+        }, 1500);
+
+        function carregarMesa() {
+            console.log('Carregando mesa:', mesaId);
+            fetch(`/api/mesas/${mesaId}`)
+                .then(response => {
+                    if (!response.ok) throw new Error('Erro ao carregar mesa');
+                    return response.json();
+                })
+                .then(mesa => {
+                    console.log('Mesa carregada:', mesa);
+                    campeonatoId = mesa.campeonato_id;
+                    document.getElementById('mesa-numero').textContent = mesa.numero;
+
+                    const jogadoresTime1 = mesa.jogadores.filter(j => j.time === 1);
+                    const jogadoresTime2 = mesa.jogadores.filter(j => j.time === 2);
+
+                    // Display no topo (acima do placar)
+                    const time1Nome = document.getElementById('time1-nome');
+                    const time2Nome = document.getElementById('time2-nome');
+
+                    if (jogadoresTime1.length > 0) {
+                        time1Nome.innerHTML = `
+                            <div class="jogador-principal">${jogadoresTime1.map(j => j.nome.toUpperCase()).join(' & ')}</div>
+                        `;
+                    } else {
+                        time1Nome.innerHTML = `<div class="jogador-principal">TIME 1</div>`;
+                    }
+
+                    if (jogadoresTime2.length > 0) {
+                        time2Nome.innerHTML = `
+                            <div class="jogador-principal">${jogadoresTime2.map(j => j.nome.toUpperCase()).join(' & ')}</div>
+                        `;
+                    } else {
+                        time2Nome.innerHTML = `<div class="jogador-principal">TIME 2</div>`;
+                    }
+
+                    // Lista de jogadores no rodapé
+                    const listTime1 = document.getElementById('list-time1');
+                    const listTime2 = document.getElementById('list-time2');
+
+                    const servidorTime = mesa.placar ? mesa.placar.servidor_time : null;
+
+                    listTime1.innerHTML = jogadoresTime1.length > 0 
+                        ? jogadoresTime1.map(j => `<div class="jogador-item ${servidorTime === 1 ? 'sacando' : ''}">${j.nome}</div>`).join('')
+                        : '<div class="jogador-item" style="color: #666;">Sem jogadores</div>';
+
+                    listTime2.innerHTML = jogadoresTime2.length > 0 
+                        ? jogadoresTime2.map(j => `<div class="jogador-item ${servidorTime === 2 ? 'sacando' : ''}">${j.nome}</div>`).join('')
+                        : '<div class="jogador-item" style="color: #666;">Sem jogadores</div>';
+
+                    const placar = mesa.placar || { pontos_time1: 0, pontos_time2: 0 };
+                    atualizarDisplay(placar);
+                })
+                .catch(error => {
+                    console.error('Erro ao carregar mesa:', error);
+                    document.getElementById('mesa-numero').textContent = 'Erro';
+                });
+        }
+
+        function atualizarDisplay(placar) {
+            const el1 = document.getElementById('pontos-1');
+            const el2 = document.getElementById('pontos-2');
+            if (el1) el1.textContent = placar.pontos_time1;
+            if (el2) el2.textContent = placar.pontos_time2;
+
+            // Atualiza informações de sets
+            const setAnterior = placarAnterior ? placarAnterior.set_numero : 1;
+            const setAtual = placar.set_numero || 1;
+            
+            document.getElementById('set-numero').textContent = setAtual;
+            document.getElementById('sets-time1').textContent = placar.sets_time1 || 0;
+            document.getElementById('sets-time2').textContent = placar.sets_time2 || 0;
+
+            // Detecta se um novo set começou
+            if (placarAnterior && setAtual !== setAnterior) {
+                console.log(`✨ SET ${setAtual} INICIADO! Pontos resetados para 0 x 0`);
+                
+                // Adiciona animação de novo set
+                const setElement = document.getElementById('set-numero');
+                if (setElement) {
+                    setElement.style.animation = 'none';
+                    setTimeout(() => {
+                        setElement.style.animation = 'setTransition 0.5s ease-out';
+                    }, 10);
+                }
+            }
+
+            // Atualiza indicador de Sacando
+            const sacadorTime1 = document.getElementById('sacador-time1');
+            const sacadorTime2 = document.getElementById('sacador-time2');
+
+            if (placar.servidor_time === 1) {
+                // Time 1 está sacando
+                if (sacadorTime1) sacadorTime1.style.display = 'flex';
+                if (sacadorTime2) sacadorTime2.style.display = 'none';
+            } else if (placar.servidor_time === 2) {
+                // Time 2 está sacando
+                if (sacadorTime1) sacadorTime1.style.display = 'none';
+                if (sacadorTime2) sacadorTime2.style.display = 'flex';
+            }
+
+            console.log(`[PLACAR] Servidor: Time ${placar.servidor_time}`);
+
+            // Se houver informação de set finalizado, pode mostrar animação (opcional)
+            if (placar.set_terminado) {
+                console.log('Set terminado! Novo set iniciando...');
+            }
+            
+            // Salva o estado atual para próxima comparação
+            placarAnterior = JSON.parse(JSON.stringify(placar));
+        }
+
+        function voltarAtras() {
+            if (campeonatoId && campeonatoId !== null && !isNaN(campeonatoId)) {
+                window.location.href = `/campeonato/${campeonatoId}`;
+            } else {
+                window.location.href = '/';
+            }
+        }
+
+        function toggleFullscreen() {
+            const btn = document.getElementById('fullscreen-btn');
+            const elem = document.documentElement;
+            
+            if (!document.fullscreenElement) {
+                // Entrar em fullscreen
+                if (elem.requestFullscreen) {
+                    elem.requestFullscreen();
+                } else if (elem.webkitRequestFullscreen) {
+                    elem.webkitRequestFullscreen();
+                } else if (elem.mozRequestFullScreen) {
+                    elem.mozRequestFullScreen();
+                } else if (elem.msRequestFullscreen) {
+                    elem.msRequestFullscreen();
+                }
+                btn.innerHTML = '<i class="fas fa-compress"></i>';
+            } else {
+                // Sair do fullscreen
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                } else if (document.webkitExitFullscreen) {
+                    document.webkitExitFullscreen();
+                } else if (document.mozCancelFullScreen) {
+                    document.mozCancelFullScreen();
+                } else if (document.msExitFullscreen) {
+                    document.msExitFullscreen();
+                }
+                btn.innerHTML = '<i class="fas fa-expand"></i>';
+            }
+        }
+
+        // Atualizar ícone do botão quando fullscreen muda
+        document.addEventListener('fullscreenchange', () => {
+            const btn = document.getElementById('fullscreen-btn');
+            if (document.fullscreenElement) {
+                btn.innerHTML = '<i class="fas fa-compress"></i>';
+            } else {
+                btn.innerHTML = '<i class="fas fa-expand"></i>';
+            }
+        });
+    </script>
+</body>
+</html>

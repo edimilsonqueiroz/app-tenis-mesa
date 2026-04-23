@@ -1,0 +1,140 @@
+/* Estilos específicos para mobile */
+
+@media (max-width: 768px) {
+    /* Garantir viewport correto */
+    body {
+        width: 100vw;
+        height: 100vh;
+        overflow: hidden;
+        font-size: 16px; /* Evitar zoom ao focar em inputs */
+    }
+
+    /* Controle remoto */
+    .controle-container {
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        padding: 8px;
+        width: 100%;
+    }
+
+    .header-controle {
+        flex-shrink: 0;
+        margin-bottom: 10px;
+    }
+
+    .header-controle h1 {
+        font-size: 18px;
+        margin: 0;
+    }
+
+    .placar-mini {
+        flex-shrink: 0;
+        margin-bottom: 10px;
+    }
+
+    .controles {
+        flex: 1;
+        min-height: 0;
+        overflow-y: auto;
+        gap: 8px;
+    }
+
+    .time-controle {
+        flex: 1 1 auto;
+        min-height: 120px;
+    }
+
+    .rodape-controle {
+        flex-shrink: 0;
+        margin-top: 8px;
+    }
+
+    /* Botões maiores para dedos */
+    .btn-pontos {
+        min-height: 50px;
+        font-size: 20px;
+    }
+
+    /* Prevenir scroll indesejado */
+    input, button, select {
+        font-size: 16px !important;
+    }
+
+    /* Touch feedback */
+    button:active {
+        opacity: 0.8;
+    }
+
+    /* Ocultar barra de endereço em mobile */
+    html, body {
+        height: 100%;
+        width: 100%;
+        margin: 0;
+        padding: 0;
+    }
+}
+
+/* Estilos para telas muito pequenas */
+@media (max-width: 480px) {
+    .placar-mini-display {
+        font-size: 14px;
+    }
+
+    .time-placar-mini .pontos {
+        font-size: 40px;
+    }
+
+    .btn-pontos {
+        min-height: 45px;
+        font-size: 18px;
+    }
+
+    .time-nome {
+        font-size: 12px;
+    }
+}
+
+/* Landscape */
+@media (max-height: 500px) {
+    .header-controle h1 {
+        font-size: 16px;
+    }
+
+    .placar-mini {
+        padding: 10px;
+        margin-bottom: 8px;
+    }
+
+    .time-placar-mini .pontos {
+        font-size: 36px;
+    }
+
+    .time-controle {
+        min-height: 100px;
+        padding: 10px;
+    }
+
+    .btn-pontos {
+        min-height: 40px;
+        font-size: 16px;
+    }
+}
+
+/* iOS Safari specifics */
+@supports (-webkit-touch-callout: none) {
+    body {
+        /* Evitar zoom ao tocar em inputs */
+        touch-action: manipulation;
+    }
+
+    button {
+        -webkit-user-select: none;
+        user-select: none;
+    }
+
+    input, select {
+        -webkit-appearance: none;
+        -webkit-border-radius: 4px;
+    }
+}

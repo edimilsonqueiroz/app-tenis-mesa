@@ -1,0 +1,415 @@
+body {
+    background: linear-gradient(135deg, #0a0a12 0%, #1a1a2e 100%);
+}
+
+.voltar-btn {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    padding: 12px 24px;
+    background: linear-gradient(135deg, var(--danger-color), #ff1744);
+    color: white;
+    border: none;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    font-weight: 600;
+    z-index: 100;
+    box-shadow: var(--shadow-lg);
+    transition: all 0.3s ease;
+    font-size: 14px;
+}
+
+.voltar-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(255, 59, 48, 0.3);
+}
+
+header {
+    text-align: center;
+    padding: 24px;
+    background: linear-gradient(135deg, rgba(0, 102, 204, 0.1), rgba(0, 201, 167, 0.1));
+    border-bottom: 2px solid var(--primary-color);
+    margin-bottom: 24px;
+}
+
+header h1 {
+    color: #ffffff;
+    font-size: var(--title-display-size);
+    letter-spacing: var(--title-letter-spacing);
+    margin-bottom: 8px;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+}
+
+header p {
+    color: #b0b0b0;
+    font-size: var(--subtitle-size);
+}
+
+.placar-title-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 11px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(145deg, #0ea5e9, #059669);
+    color: #fff;
+    box-shadow: 0 10px 22px rgba(14, 165, 233, 0.35);
+}
+
+.placar-container {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 24px;
+    padding: 20px;
+    max-width: 1600px;
+    margin: 0 auto;
+}
+
+.mesa-placar {
+    background: linear-gradient(135deg, rgba(0, 102, 204, 0.15), rgba(0, 201, 167, 0.05));
+    border-radius: var(--border-radius);
+    padding: 28px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    border: 2px solid var(--primary-color);
+    color: #ffffff;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 30px;
+}
+
+.mesa-placar:hover {
+    border-color: var(--secondary-color);
+    box-shadow: 0 12px 48px rgba(0, 201, 167, 0.2);
+}
+
+.mesa-informacoes {
+    flex: 1;
+}
+
+.mesa-numero {
+    text-align: left;
+    font-size: 26px;
+    font-weight: bold;
+    color: var(--secondary-color);
+    margin-bottom: 16px;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.jogadores-section {
+    background: rgba(0, 0, 0, 0.2);
+    padding: 14px;
+    border-radius: 10px;
+}
+
+.placar-display {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 40px;
+    padding: 40px 20px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    min-width: 350px;
+}
+
+.time-placar {
+    text-align: center;
+    flex: 1;
+}
+
+.pontos {
+    font-size: 110px;
+    font-weight: 900;
+    background: linear-gradient(135deg, var(--secondary-color), #00d4a8);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1;
+    margin: 0;
+}
+
+.vs-text {
+    font-size: 40px;
+    color: rgba(255, 255, 255, 0.3);
+    font-weight: bold;
+}
+
+.time-jogadores {
+    margin-bottom: 12px;
+}
+
+.time-jogadores:last-child {
+    margin-bottom: 0;
+}
+
+.time-label {
+    font-size: 13px;
+    color: #a0d4ff;
+    text-transform: uppercase;
+    font-weight: 700;
+    margin-bottom: 8px;
+    letter-spacing: 0.5px;
+}
+
+.jogador-item {
+    background: rgba(0, 102, 204, 0.2);
+    padding: 10px 14px;
+    margin: 4px 0;
+    border-radius: 6px;
+    font-size: 15px;
+    color: #e8f0f8;
+    border-left: 3px solid var(--primary-color);
+}
+
+.controle-remoto-btn {
+    display: block;
+    width: 100%;
+    padding: 14px;
+    margin-top: 16px;
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+    color: white;
+    border: none;
+    border-radius: var(--border-radius);
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: var(--shadow-md);
+}
+
+.controle-remoto-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0, 102, 204, 0.3);
+}
+
+.controle-remoto-btn:active {
+    transform: translateY(0);
+}
+
+.qr-code {
+    text-align: center;
+    margin-top: 10px;
+    font-size: 12px;
+    color: #888;
+}
+
+@media (max-width: 1024px) {
+    .placar-container {
+        padding: 16px;
+        gap: 16px;
+    }
+
+    .mesa-placar {
+        padding: 20px;
+        gap: 20px;
+    }
+
+    .mesa-numero {
+        font-size: 24px;
+    }
+
+    .pontos {
+        font-size: 100px;
+    }
+
+    .vs-text {
+        font-size: 36px;
+    }
+
+    .placar-display {
+        min-width: 300px;
+        gap: 30px;
+    }
+
+}
+
+@media (max-width: 768px) {
+    header {
+        padding: 16px;
+        margin-bottom: 16px;
+    }
+
+    header h1 {
+        font-size: 24px;
+    }
+
+    .placar-container {
+        grid-template-columns: 1fr;
+        gap: 16px;
+        padding: 12px;
+    }
+
+    .mesa-placar {
+        padding: 16px;
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .mesa-informacoes {
+        width: 100%;
+    }
+
+    .placar-display {
+        width: 100%;
+        min-width: unset;
+        gap: 20px;
+        padding: 24px 16px;
+    }
+
+    .pontos {
+        font-size: 80px;
+    }
+
+    .mesa-numero {
+        font-size: 22px;
+    }
+
+    .vs-text {
+        font-size: 28px;
+    }
+}
+
+@media (max-width: 480px) {
+    .mesa-placar {
+        padding: 12px;
+    }
+
+    .placar-display {
+        gap: 15px;
+        padding: 16px 12px;
+    }
+
+    .pontos {
+        font-size: 60px;
+    }
+
+    .vs-text {
+        font-size: 24px;
+    }
+
+    .controle-remoto-btn {
+        padding: 10px;
+        font-size: 14px;
+    }
+
+    .mesa-numero {
+        font-size: 18px;
+    }
+
+    .jogador-item {
+        font-size: 13px;
+        padding: 8px 10px;
+    }
+
+    .time-label {
+        font-size: 11px;
+    }
+
+    .voltar-btn {
+        padding: 10px 16px;
+        font-size: 12px;
+    }
+
+    header {
+        padding: 12px;
+        margin-bottom: 12px;
+    }
+
+}
+
+@media (max-width: 600px) {
+    .placar-container {
+        gap: 12px;
+        padding: 12px;
+    }
+
+    .mesa-placar {
+        gap: 16px;
+        flex-direction: column;
+    }
+
+    .placar-display {
+        min-width: unset;
+        width: 100%;
+        gap: 20px;
+    }
+
+    .mesa-numero {
+        font-size: 20px;
+    }
+
+    .pontos {
+        font-size: 80px;
+    }
+
+    .vs-text {
+        font-size: 32px;
+    }
+
+    .controle-remoto-btn {
+        padding: 12px;
+        font-size: 14px;
+    }
+}
+
+@media (max-width: 400px) {
+    .mesa-placar {
+        padding: 10px;
+        gap: 10px;
+    }
+
+    .placar-display {
+        padding: 12px 8px;
+        gap: 12px;
+    }
+
+    .pontos {
+        font-size: 50px;
+    }
+
+    .vs-text {
+        font-size: 20px;
+    }
+
+    .mesa-numero {
+        font-size: 16px;
+    }
+
+    .jogador-item {
+        font-size: 11px;
+        padding: 6px 8px;
+        margin: 2px 0;
+    }
+
+    .time-label {
+        font-size: 10px;
+        margin-bottom: 6px;
+    }
+
+    .voltar-btn {
+        top: 10px;
+        left: 10px;
+        padding: 8px 12px;
+        font-size: 11px;
+    }
+
+    header {
+        padding: 10px;
+        margin-bottom: 10px;
+    }
+
+    header h1 {
+        margin-bottom: 4px;
+    }
+
+    .controle-remoto-btn {
+        padding: 10px;
+        font-size: 12px;
+        margin-top: 12px;
+    }
+}

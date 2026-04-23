@@ -1,0 +1,306 @@
+.ranking-hero {
+    position: relative;
+    overflow: hidden;
+    background:
+        radial-gradient(1200px 280px at -10% -120%, rgba(59, 130, 246, 0.22) 0%, rgba(59, 130, 246, 0) 60%),
+        radial-gradient(900px 260px at 115% -130%, rgba(245, 158, 11, 0.24) 0%, rgba(245, 158, 11, 0) 60%),
+        linear-gradient(145deg, #f8fbff 0%, #fff9ef 45%, #ffffff 100%);
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    border-radius: 18px;
+    box-shadow: 0 14px 34px rgba(15, 23, 42, 0.1);
+    padding: 30px 28px;
+}
+
+.ranking-hero h1 {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 0;
+    font-size: var(--title-display-size);
+    letter-spacing: var(--title-letter-spacing);
+    color: #0f172a;
+}
+
+.ranking-hero-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(145deg, #f59e0b, #d97706);
+    color: #fff;
+    box-shadow: 0 10px 22px rgba(217, 119, 6, 0.35);
+}
+
+.ranking-subtitle {
+    margin-top: 10px;
+    color: #475569;
+    font-size: var(--subtitle-size);
+    font-weight: 500;
+}
+
+.ranking-nav {
+    background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    border-radius: 14px;
+    padding: 8px;
+    display: flex;
+    gap: 8px;
+    margin: 20px 0 24px;
+    box-shadow: 0 10px 28px rgba(15, 23, 42, 0.08);
+}
+
+.ranking-nav-item {
+    min-height: 46px;
+    min-width: 220px;
+    border-radius: 10px;
+    border: 1px solid rgba(148, 163, 184, 0.35);
+    background: #fff;
+    color: #334155;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 700;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    padding: 0 14px;
+}
+
+.ranking-nav-item:hover {
+    border-color: rgba(29, 78, 216, 0.35);
+    color: #1e40af;
+    transform: translateY(-1px);
+    box-shadow: 0 8px 18px rgba(30, 64, 175, 0.12);
+}
+
+.ranking-nav-item-primary {
+    background: linear-gradient(135deg, #0f172a, #1e293b);
+    color: #fff;
+    border-color: transparent;
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.32);
+}
+
+.ranking-nav-item-primary:hover {
+    color: #fff;
+    border-color: transparent;
+    box-shadow: 0 12px 26px rgba(15, 23, 42, 0.35);
+}
+
+.ranking-table-wrapper {
+    overflow-x: auto;
+    border-radius: var(--border-radius);
+    box-shadow: 0 12px 26px rgba(15, 23, 42, 0.09);
+    background: white;
+    border: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.ranking-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 15px;
+}
+
+.ranking-table thead {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+    color: white;
+}
+
+.ranking-table th {
+    padding: 14px 18px;
+    text-align: left;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.ranking-table th:first-child,
+.ranking-table td:first-child {
+    text-align: center;
+    width: 60px;
+}
+
+.ranking-table td {
+    padding: 12px 18px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.ranking-table tbody tr:hover {
+    background: linear-gradient(180deg, #f8fbff 0%, #f3f8ff 100%);
+}
+
+.ranking-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.posicao {
+    font-weight: 700;
+    font-size: 16px;
+    color: var(--text-muted);
+}
+
+.posicao-1 { color: #FFD700; font-size: 20px; }
+.posicao-2 { color: #C0C0C0; font-size: 18px; }
+.posicao-3 { color: #CD7F32; font-size: 18px; }
+
+.medalha {
+    display: inline-block;
+    width: 32px;
+    height: 32px;
+    line-height: 32px;
+    text-align: center;
+    border-radius: 50%;
+    font-weight: 700;
+    font-size: 14px;
+}
+
+.medalha-1 { background: linear-gradient(135deg, #FFD700, #FFA500); color: white; }
+.medalha-2 { background: linear-gradient(135deg, #C0C0C0, #A0A0A0); color: white; }
+.medalha-3 { background: linear-gradient(135deg, #CD7F32, #A0522D); color: white; }
+
+.jogador-nome {
+    font-weight: 600;
+    font-size: 15px;
+    color: var(--text-color);
+}
+
+.jogador-campeonatos {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 2px;
+}
+
+.badge-sets {
+    display: inline-block;
+    background: linear-gradient(135deg, var(--secondary-color), var(--secondary-dark));
+    color: white;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-weight: 700;
+    font-size: 14px;
+}
+
+.badge-jogos {
+    display: inline-block;
+    background: var(--light-color);
+    color: var(--text-color);
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 13px;
+}
+
+.empty-ranking {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text-muted);
+}
+
+.empty-ranking i {
+    font-size: 48px;
+    margin-bottom: 16px;
+    color: var(--border-color);
+}
+
+.empty-ranking p {
+    font-size: 16px;
+    margin-bottom: 8px;
+}
+
+.campeonatos-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 4px;
+}
+
+.tag-campeonato {
+    display: inline-block;
+    background: #e8f4fd;
+    color: var(--primary-color);
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 500;
+}
+
+@media (max-width: 768px) {
+    .ranking-hero {
+        padding: 22px 18px;
+    }
+
+    .ranking-hero h1 {
+        font-size: var(--title-display-size);
+    }
+
+    .ranking-subtitle {
+        font-size: var(--subtitle-size);
+    }
+
+    .ranking-table {
+        font-size: 13px;
+    }
+
+    .ranking-table th,
+    .ranking-table td {
+        padding: 10px 12px;
+    }
+
+    .ranking-nav {
+        padding: 6px;
+    }
+
+    .ranking-nav-item {
+        width: 100%;
+        min-width: 0;
+    }
+
+    .jogador-campeonatos {
+        display: none;
+    }
+}
+
+@media (max-width: 480px) {
+    .container {
+        padding: 8px;
+    }
+
+    .ranking-hero {
+        padding: 16px 12px;
+    }
+
+    .ranking-hero h1 {
+        font-size: var(--title-display-size);
+    }
+
+    .ranking-subtitle {
+        font-size: var(--subtitle-size);
+    }
+
+    .ranking-table {
+        font-size: 12px;
+    }
+
+    .ranking-table th,
+    .ranking-table td {
+        padding: 8px 8px;
+    }
+
+    .badge-sets {
+        padding: 3px 8px;
+        font-size: 12px;
+    }
+
+    .badge-jogos {
+        padding: 3px 8px;
+        font-size: 11px;
+    }
+
+    .medalha {
+        width: 26px;
+        height: 26px;
+        line-height: 26px;
+        font-size: 12px;
+    }
+}

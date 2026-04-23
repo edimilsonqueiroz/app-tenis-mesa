@@ -1,0 +1,686 @@
+body {
+    background: #fafafa;
+}
+
+.container-gerenciamento {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.secao {
+    background: white;
+    border-radius: var(--border-radius);
+    padding: 28px;
+    margin-bottom: 24px;
+    box-shadow: var(--shadow-md);
+}
+
+.btn-voltar {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    padding: 12px 24px;
+    background: var(--text-muted);
+    color: white;
+    border: none;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    font-weight: 600;
+    z-index: 99;
+    transition: all 0.3s ease;
+    box-shadow: var(--shadow-md);
+}
+
+.btn-voltar:hover {
+    background: var(--text-color);
+    transform: translateY(-2px);
+}
+
+header {
+    margin-top: 60px;
+    margin-bottom: 30px;
+}
+
+.nova-mesa-form {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.nova-mesa-form input,
+.nova-mesa-form select {
+    flex: 1;
+    padding: 12px 16px;
+    border: 2px solid var(--border-color);
+    border-radius: var(--border-radius);
+    font-size: 14px;
+    transition: all 0.3s ease;
+}
+
+.nova-mesa-form input:focus,
+.nova-mesa-form select:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 4px rgba(0, 102, 204, 0.1);
+}
+
+.mesas-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+    gap: 20px;
+}
+
+.mesa-card {
+    border: 2px solid var(--border-color);
+    border-radius: var(--border-radius);
+    padding: 20px;
+    background: white;
+    box-shadow: var(--shadow-md);
+    transition: all 0.3s ease;
+}
+
+.mesa-card:hover {
+    box-shadow: var(--shadow-lg);
+    border-color: var(--primary-color);
+}
+
+.mesa-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid var(--primary-color);
+}
+
+.mesa-numero {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--primary-color);
+}
+
+.mesa-status {
+    font-size: 12px;
+    padding: 6px 12px;
+    background: var(--success-color);
+    color: white;
+    border-radius: 6px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.mesa-status.indisponivel {
+    background: var(--danger-color);
+}
+
+.mesa-status.pausada {
+    background: var(--warning-color);
+}
+
+.mesa-placar {
+    text-align: center;
+    margin: 16px 0;
+    padding: 16px;
+    background: var(--light-color);
+    border-radius: 10px;
+}
+
+.mesa-placar-display {
+    font-size: 36px;
+    font-weight: 700;
+    color: var(--primary-color);
+    font-family: 'Courier New', monospace;
+}
+
+.jogadores-list {
+    margin: 16px 0;
+    background: var(--light-color);
+    padding: 12px;
+    border-radius: 10px;
+    min-height: 50px;
+    max-height: 150px;
+    overflow-y: auto;
+}
+
+.jogador-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    background: white;
+    margin: 6px 0;
+    border-radius: 6px;
+    font-size: 14px;
+    border-left: 3px solid var(--primary-color);
+}
+
+.jogador-time {
+    font-weight: 700;
+    color: var(--primary-color);
+    margin-right: 10px;
+    background: var(--light-color);
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+}
+
+.btn-remover-jogador {
+    background: var(--danger-color);
+    color: white;
+    border: none;
+    padding: 4px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-remover-jogador:hover {
+    background: #ff1744;
+    transform: scale(1.05);
+}
+
+.adicionar-jogador {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.adicionar-jogador select {
+    flex: 1;
+    min-width: 140px;
+    padding: 10px;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 13px;
+    transition: all 0.3s ease;
+}
+
+.adicionar-jogador select:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.1);
+}
+
+.adicionar-jogador button {
+    padding: 10px 14px;
+    background: var(--success-color);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 14px;
+    transition: all 0.3s ease;
+    min-width: 50px;
+    flex-shrink: 0;
+}
+
+.adicionar-jogador button:hover {
+    background: #29a944;
+    transform: translateY(-2px);
+}
+
+.mesa-acoes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 16px;
+}
+
+.mesa-acoes button {
+    flex: 1 1 120px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    white-space: nowrap;
+    padding: 10px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 13px;
+    transition: all 0.3s ease;
+}
+
+.btn-placar {
+    background: var(--primary-color);
+    color: white;
+}
+
+.btn-placar:hover {
+    background: var(--primary-dark);
+    transform: translateY(-2px);
+}
+
+.btn-deletar-mesa {
+    background: var(--danger-color);
+    color: white;
+}
+
+.btn-deletar-mesa:hover {
+    background: #ff1744;
+    transform: translateY(-2px);
+}
+
+.empty-message {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text-muted);
+    grid-column: 1 / -1;
+}
+
+@media (max-width: 1024px) {
+    .mesas-grid {
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    }
+}
+
+@media (max-width: 768px) {
+    .mesas-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .nova-mesa-form {
+        flex-direction: column;
+    }
+
+    .mesa-numero {
+        font-size: 24px;
+    }
+
+    .btn-voltar {
+        position: relative;
+        margin-bottom: 20px;
+        width: 100%;
+        left: 0;
+        top: 0;
+        margin-left: 0;
+    }
+
+    .container-gerenciamento {
+        padding: 12px;
+    }
+}
+
+@media (max-width: 480px) {
+    .container-gerenciamento {
+        padding: 8px;
+    }
+
+    .secao {
+        padding: 16px;
+        margin-bottom: 16px;
+    }
+
+    .nova-mesa-form {
+        gap: 8px;
+    }
+
+    .nova-mesa-form input,
+    .nova-mesa-form select {
+        padding: 10px 12px;
+        font-size: 13px;
+    }
+
+    .nova-mesa-form button {
+        padding: 10px 12px;
+        font-size: 13px;
+    }
+
+    .mesa-card {
+        padding: 12px;
+    }
+
+    .mesa-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+
+    .mesa-numero {
+        font-size: 18px;
+    }
+
+    .mesa-status {
+        font-size: 11px;
+        padding: 4px 8px;
+    }
+
+    .btn-placar,
+    .btn-deletar-mesa {
+        padding: 8px 12px;
+        font-size: 12px;
+    }
+
+    .jogador-item {
+        font-size: 12px;
+        padding: 6px;
+    }
+
+    header {
+        margin-top: 50px;
+    }
+
+    header h1 {
+        font-size: 24px;
+    }
+
+    header p {
+        font-size: 12px;
+    }
+}
+
+@media (max-width: 480px) {
+    .container-gerenciamento {
+        padding: 8px;
+    }
+
+    .secao {
+        padding: 16px;
+        margin-bottom: 16px;
+    }
+
+    .nova-mesa-form {
+        gap: 8px;
+    }
+
+    .nova-mesa-form input,
+    .nova-mesa-form select {
+        padding: 10px 12px;
+        font-size: 13px;
+    }
+
+    .nova-mesa-form button {
+        padding: 10px 12px;
+        font-size: 13px;
+    }
+
+    .mesa-card {
+        padding: 12px;
+    }
+
+    .mesa-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+
+    .mesa-numero {
+        font-size: 18px;
+    }
+
+    .mesa-status {
+        font-size: 11px;
+        padding: 4px 8px;
+    }
+
+    .btn-placar,
+    .btn-deletar-mesa {
+        padding: 8px 12px;
+        font-size: 12px;
+    }
+
+    .jogador-item {
+        font-size: 12px;
+        padding: 6px;
+    }
+
+    header {
+        margin-top: 50px;
+    }
+
+    header h1 {
+        font-size: 24px;
+    }
+
+    header p {
+        font-size: 12px;
+    }
+}
+
+/* Modal Controle */
+.modal-controle {
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    animation: fadeIn 0.3s ease-in;
+    opacity: 0;
+    pointer-events: none;
+    display: none;
+    justify-content: center;
+    align-items: center;
+    transition: opacity 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.modal-controle.show {
+    display: flex;
+    opacity: 1;
+    pointer-events: all;
+}
+
+.modal-controle-content {
+    position: relative;
+    background: white;
+    border-radius: var(--border-radius);
+    padding: 32px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    max-width: 500px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+    text-align: center;
+    animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(30px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.modal-controle-header {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--text-color);
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+}
+
+.modal-qrcode-container {
+    background: #f5f5f5;
+    border-radius: 12px;
+    padding: 20px;
+    margin: 24px 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 250px;
+}
+
+.modal-qrcode-container canvas {
+    max-width: 100%;
+}
+
+.modal-controle-buttons {
+    display: flex;
+    gap: 12px;
+    margin-top: 24px;
+}
+
+.modal-btn {
+    flex: 1;
+    padding: 14px;
+    border: none;
+    border-radius: var(--border-radius);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.modal-btn-primary {
+    background: var(--primary-color);
+    color: white;
+}
+
+.modal-btn-primary:hover {
+    background: var(--primary-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 102, 204, 0.3);
+}
+
+.modal-btn-secondary {
+    background: var(--border-color);
+    color: var(--text-color);
+}
+
+.modal-btn-secondary:hover {
+    background: var(--text-muted);
+    color: white;
+}
+
+.modal-close-btn {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: none;
+    border: none;
+    font-size: 32px;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    z-index: 10;
+    -webkit-appearance: none;
+    appearance: none;
+    padding: 0;
+}
+
+.modal-close-btn:hover {
+    color: var(--text-color);
+    background: rgba(0, 0, 0, 0.05);
+}
+
+.modal-close-btn:active {
+    background: rgba(0, 0, 0, 0.1);
+    transform: scale(0.9);
+}
+
+.modal-controle-text {
+    color: var(--text-muted);
+    font-size: 13px;
+    margin-bottom: 16px;
+}
+
+.jogadores-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 16px;
+}
+
+.jogador-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    background: #f5f5f5;
+    border-radius: var(--border-radius);
+    border-left: 4px solid var(--primary-color);
+    transition: all 0.3s ease;
+}
+
+.jogador-item:hover {
+    background: #efefef;
+    box-shadow: var(--shadow-sm);
+}
+
+.jogador-nome {
+    font-weight: 500;
+    color: var(--text-color);
+    flex: 1;
+}
+
+.jogador-remove {
+    background: #ff6b6b;
+    color: white;
+    border: none;
+    border-radius: var(--border-radius);
+    padding: 6px 12px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.jogador-remove:hover {
+    background: #ff5252;
+    transform: scale(1.05);
+}
+
+.jogador-remove:active {
+    transform: scale(0.95);
+}
+
+.loading {
+    text-align: center;
+    color: var(--text-muted);
+    padding: 20px;
+    font-style: italic;
+}
+
+@media print {
+    body * {
+        visibility: hidden;
+    }
+    #modalQRPrint.show,
+    #modalQRPrint.show .modal-controle-content,
+    #modalQRPrint.show .modal-controle-content * {
+        visibility: visible;
+    }
+    #modalQRPrint.show {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: white;
+        display: flex;
+    }
+    #modalQRPrint .modal-controle-content {
+        box-shadow: none;
+        border: none;
+    }
+    #modalQRPrint .modal-controle-buttons,
+    #modalQRPrint .modal-close-btn {
+        display: none !important;
+    }
+}

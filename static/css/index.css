@@ -1,0 +1,371 @@
+.home-hero {
+    position: relative;
+    overflow: hidden;
+    background:
+        radial-gradient(1200px 300px at -10% -120%, rgba(59, 130, 246, 0.25) 0%, rgba(59, 130, 246, 0) 60%),
+        radial-gradient(900px 260px at 110% -130%, rgba(16, 185, 129, 0.22) 0%, rgba(16, 185, 129, 0) 60%),
+        linear-gradient(145deg, #f8fbff 0%, #f4f9f7 45%, #ffffff 100%);
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    border-radius: 18px;
+    box-shadow: 0 14px 34px rgba(15, 23, 42, 0.1);
+    padding: 30px 28px;
+}
+
+.home-hero h1 {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 0;
+    font-size: var(--title-display-size);
+    letter-spacing: var(--title-letter-spacing);
+    color: #0f172a;
+}
+
+.hero-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(145deg, #0ea5e9, #059669);
+    color: #fff;
+    box-shadow: 0 10px 22px rgba(14, 165, 233, 0.35);
+}
+
+.home-subtitle {
+    margin-top: 10px;
+    color: #475569;
+    font-size: var(--subtitle-size);
+    font-weight: 500;
+}
+
+.home-nav {
+    background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    border-radius: 14px;
+    padding: 8px;
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin: 20px 0 24px;
+    box-shadow: 0 10px 28px rgba(15, 23, 42, 0.08);
+}
+
+.home-nav-item {
+    flex: 1 1 220px;
+    min-height: 46px;
+    border-radius: 10px;
+    border: 1px solid rgba(148, 163, 184, 0.35);
+    background: #fff;
+    color: #334155;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 700;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    padding: 0 14px;
+}
+
+.home-nav-item:hover {
+    border-color: rgba(29, 78, 216, 0.35);
+    color: #1e40af;
+    transform: translateY(-1px);
+    box-shadow: 0 8px 18px rgba(30, 64, 175, 0.12);
+}
+
+.home-nav-item-primary {
+    background: linear-gradient(135deg, #0f172a, #1e293b);
+    color: #fff;
+    border-color: transparent;
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.32);
+}
+
+.home-nav-item-primary:hover {
+    color: #fff;
+    border-color: transparent;
+    box-shadow: 0 12px 26px rgba(15, 23, 42, 0.35);
+}
+
+.home-nav-item-ranking {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    color: #fff;
+    border-color: transparent;
+    box-shadow: 0 10px 24px rgba(217, 119, 6, 0.34);
+}
+
+.home-nav-item-ranking:hover {
+    color: #fff;
+    border-color: transparent;
+    box-shadow: 0 12px 26px rgba(217, 119, 6, 0.38);
+}
+
+.home-section-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 18px;
+}
+
+.home-section-head h2 {
+    margin: 0;
+}
+
+.home-section-badge {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 999px;
+    padding: 5px 11px;
+    font-size: 12px;
+    font-weight: 700;
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.campeonato-card {
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    border-top: 4px solid #0ea5e9;
+    box-shadow: 0 12px 26px rgba(15, 23, 42, 0.09);
+}
+
+.campeonato-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 18px 36px rgba(15, 23, 42, 0.13);
+}
+
+.stat {
+    border: 1px solid rgba(148, 163, 184, 0.28);
+    background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+}
+
+.modal-content {
+    max-width: 600px;
+    width: 90%;
+}
+
+@media (max-width: 1024px) {
+    .home-hero h1 {
+        font-size: var(--title-display-size);
+    }
+
+    .campeonatos-grid {
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    }
+}
+
+@media (max-width: 768px) {
+    .home-hero {
+        padding: 22px 18px;
+    }
+
+    .home-hero h1 {
+        font-size: var(--title-display-size);
+    }
+
+    .home-subtitle {
+        font-size: var(--subtitle-size);
+    }
+
+    .campeonatos-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 14px;
+    }
+
+    .home-nav {
+        padding: 6px;
+    }
+
+    .home-nav-item {
+        flex: 1 1 100%;
+    }
+
+    .modal-content {
+        width: 95%;
+        max-width: 500px;
+    }
+}
+
+@media (max-width: 600px) {
+    .campeonatos-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .home-hero h1 {
+        font-size: var(--title-display-size);
+    }
+
+    .hero-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+    }
+
+    .modal-content {
+        width: 95%;
+        max-width: 90vw;
+        padding: 16px;
+    }
+
+    .modal-content h2 {
+        font-size: 20px;
+        margin-bottom: 16px;
+    }
+
+    .form-group {
+        margin-bottom: 12px;
+    }
+
+    .form-group label {
+        font-size: 13px;
+    }
+
+    .form-group input,
+    .form-group textarea {
+        font-size: 14px;
+        padding: 10px;
+    }
+
+    .card-stats {
+        flex-direction: column;
+        gap: 8px;
+        font-size: 12px;
+    }
+
+    .card-actions {
+        flex-direction: column;
+        gap: 8px;
+    }
+}
+
+@media (max-width: 480px) {
+    .container {
+        padding: 8px;
+    }
+
+    .home-hero {
+        padding: 16px 12px;
+    }
+
+    .home-hero h1 {
+        font-size: var(--title-display-size);
+    }
+
+    .home-subtitle {
+        font-size: var(--subtitle-size);
+    }
+
+    .home-nav {
+        gap: 6px;
+        margin-bottom: 16px;
+    }
+
+    .home-nav-item {
+        font-size: 13px;
+        min-height: 42px;
+    }
+
+    .section {
+        padding: 12px;
+        margin-bottom: 14px;
+    }
+
+    .section h2 {
+        font-size: 18px;
+        margin-bottom: 12px;
+    }
+
+    .campeonato-card {
+        padding: 12px;
+    }
+
+    .campeonato-card h3 {
+        font-size: 16px;
+        margin-bottom: 8px;
+    }
+
+    .campeonato-card .descricao {
+        font-size: 12px;
+        margin-bottom: 10px;
+    }
+
+    .card-stats {
+        gap: 6px;
+        font-size: 11px;
+        margin-bottom: 10px;
+    }
+
+    .card-actions button {
+        padding: 8px 10px;
+        font-size: 12px;
+    }
+
+    .modal-content {
+        width: 95%;
+        max-width: 90vw;
+        padding: 14px;
+    }
+
+    .modal-content h2 {
+        font-size: 18px;
+    }
+
+    .form-group {
+        margin-bottom: 10px;
+    }
+
+    .form-group label {
+        font-size: 12px;
+    }
+
+    .form-group input,
+    .form-group textarea {
+        font-size: 13px;
+        padding: 8px;
+    }
+}
+
+@media (max-width: 360px) {
+    .home-hero h1 {
+        font-size: var(--title-display-size);
+    }
+
+    .home-subtitle {
+        font-size: var(--subtitle-size);
+    }
+
+    .home-nav-item {
+        min-height: 40px;
+        font-size: 12px;
+    }
+
+    .section {
+        padding: 10px;
+    }
+
+    .section h2 {
+        font-size: 16px;
+    }
+
+    .campeonato-card {
+        padding: 10px;
+    }
+
+    .campeonato-card h3 {
+        font-size: 14px;
+    }
+
+    .card-actions {
+        gap: 6px;
+    }
+
+    .card-actions button {
+        padding: 6px 8px;
+        font-size: 11px;
+    }
+}
