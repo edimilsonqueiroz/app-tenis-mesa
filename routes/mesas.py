@@ -15,6 +15,15 @@ def criar_mesa():
     if not campeonato:
         return jsonify({'erro': 'Campeonato não encontrado'}), 404
     
+    # Verificar se já existe mesa com mesmo número neste campeonato
+    mesa_existente = Mesa.query.filter_by(
+        campeonato_id=dados['campeonato_id'],
+        numero=dados['numero']
+    ).first()
+    
+    if mesa_existente:
+        return jsonify({'erro': f'Já existe uma mesa com o número {dados["numero"]} neste campeonato'}), 409
+    
     try:
         nova_mesa = Mesa(
             numero=dados['numero'],

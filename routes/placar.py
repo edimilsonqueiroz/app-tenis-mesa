@@ -667,9 +667,9 @@ def liberar_mesa(mesa_id):
         
         # 3. Remover todos os jogadores da mesa (apenas desvincular, não deletar)
         jogadores_removidos = []
-        for jogador in mesa.jogadores:
-            jogadores_removidos.append(jogador.nome)
-            jogador.mesa_id = None  # Apenas desvincula da mesa, não deleta o registro
+        for jogador_mesa in mesa.jogadores_mesa:
+            jogadores_removidos.append(jogador_mesa.jogador.nome)
+            db.session.delete(jogador_mesa)
         
         print(f"[LIBERAR MESA] Jogadores desvinculados da mesa: {', '.join(jogadores_removidos) if jogadores_removidos else 'nenhum'}")
         

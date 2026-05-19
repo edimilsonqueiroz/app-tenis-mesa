@@ -74,17 +74,16 @@ def mesa(app_context, campeonato):
 @pytest.fixture(scope='function')
 def mesa_com_jogadores(app_context, mesa):
     """Cria mesa com 2 jogadores"""
-    jogador1 = Jogador(
-        nome='Jogador 1',
-        mesa_id=mesa.id,
-        time=1
-    )
-    jogador2 = Jogador(
-        nome='Jogador 2',
-        mesa_id=mesa.id,
-        time=2
-    )
+    from models import JogadorMesa
+    
+    jogador1 = Jogador(nome='Jogador 1')
+    jogador2 = Jogador(nome='Jogador 2')
     db.session.add_all([jogador1, jogador2])
+    db.session.commit()
+    
+    jm1 = JogadorMesa(jogador_id=jogador1.id, mesa_id=mesa.id, time=1)
+    jm2 = JogadorMesa(jogador_id=jogador2.id, mesa_id=mesa.id, time=2)
+    db.session.add_all([jm1, jm2])
     db.session.commit()
     
     # Mudar status para em_uso

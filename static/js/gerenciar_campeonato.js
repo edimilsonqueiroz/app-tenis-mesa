@@ -478,6 +478,23 @@
             .catch(error => { console.error(error); alert(error.message); });
         }
 
+        function resetarFaseGrupos() {
+            const confirmado = confirm('Tem certeza que deseja resetar a fase de grupos? Todas as partidas e classificações serão perdidas.');
+            if (!confirmado) return;
+
+            fetch(`/api/campeonatos/${campeonatoId}/fase-grupos`, {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' }
+            })
+            .then(response => response.json().then(data => ({ ok: response.ok, data })))
+            .then(({ ok, data }) => {
+                if (!ok) throw new Error(data.erro || 'Erro ao resetar fase de grupos');
+                alert('Fase de grupos resetada com sucesso!');
+                carregarMesas(); carregarTorneio();
+            })
+            .catch(error => { console.error(error); alert(error.message); });
+        }
+
         function avancarParaMataMata() {
             const confirmado = confirm('Avançar para o mata-mata? Os classificados de cada grupo serão gerados.');
             if (!confirmado) return;
@@ -628,6 +645,9 @@
 
                     const btnAvancar = document.getElementById('btn-avancar-mata-mata');
                     btnAvancar.style.display = torneio.fase_atual === 'aguardando_avanco' ? '' : 'none';
+
+                    const btnResetar = document.getElementById('btn-resetar-fase-grupos');
+                    btnResetar.style.display = torneio.tem_grupos ? '' : 'none';
 
                     // Grupos
                     const gruposSection = document.getElementById('grupos-section');

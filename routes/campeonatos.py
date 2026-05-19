@@ -284,6 +284,84 @@ def criar_fase_grupos(id):
         return jsonify(torneio), 201
     except Exception as e:
         db.session.rollback()
+        print(f"[ERROR] Erro ao gerar fase de grupos para campeonato {id}: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'erro': str(e)}), 400
+
+
+@bp.route('/<int:id>/fase-grupos', methods=['DELETE'])
+def resetar_fase_grupos(id):
+    """Deleta a fase de grupos do campeonato."""
+    campeonato = Campeonato.query.get(id)
+    if not campeonato:
+        return jsonify({'erro': 'Campeonato não encontrado'}), 404
+
+    try:
+        from sqlalchemy import text
+        
+        print(f"[RESET] Resetando fase de grupos para campeonato {id}")
+        
+        # Desabilitar foreign keys check para SQLite
+        db.session.execute(text('PRAGMA foreign_keys = OFF'))
+        
+        # Deletar TODAS as classificações orphaned (cujo grupo não existe mais)
+        orphaned_count = db.session.execute(
+            text("DELETE FROM classificacoes_grupo WHERE grupo_id NOT IN (SELECT id FROM grupos_chaveamento)")
+        )
+        if orphaned_count.rowcount > 0:
+            print(f"[RESET] Deletadas {orphaned_count.rowcount} classificação(ões) órfã(s)")
+        
+        # Deletar TODAS as classificações do campeonato
+        result_class = db.session.execute(
+            text("DELETE FROM classificacoes_grupo WHERE grupo_id IN (SELECT id FROM grupos_chaveamento WHERE campeonato_id = :cid)"),
+            {'cid': id}
+        )
+        print(f"[RESET] Deletadas {result_class.rowcount} classificação(ões)")
+        
+        # Deletar partidas dos grupos
+        result_partidas = db.session.execute(
+            text("DELETE FROM partidas_grupo WHERE campeonato_id = :cid"),
+            {'cid': id}
+        )
+        print(f"[RESET] Deletadas {result_partidas.rowcount} partida(s) de grupo")
+        
+        # Deletar todos os grupos do campeonato
+        result_grupos = db.session.execute(
+            text("DELETE FROM grupos_chaveamento WHERE campeonato_id = :cid"),
+            {'cid': id}
+        )
+        print(f"[RESET] Deletados {result_grupos.rowcount} grupo(s)")
+        
+        # Última verificação e limpeza de órfãs
+        final_orphaned = db.session.execute(
+            text("DELETE FROM classificacoes_grupo WHERE grupo_id NOT IN (SELECT id FROM grupos_chaveamento)")
+        )
+        if final_orphaned.rowcount > 0:
+            print(f"[RESET] Deletadas {final_orphaned.rowcount} classificação(ões) órfã(s) finais")
+        
+        # Reabilitar foreign keys check
+        db.session.execute(text('PRAGMA foreign_keys = ON'))
+        db.session.commit()
+
+        try:
+            from app import broadcast_campeonato_update
+            broadcast_campeonato_update(id, 'chaveamento_atualizado')
+        except Exception as e:
+            print(f"[BROADCAST ERROR] {e}")
+
+        print(f"[RESET] Fase de grupos resetada com sucesso")
+        return jsonify({'mensagem': 'Fase de grupos resetada com sucesso'}), 200
+    except Exception as e:
+        db.session.rollback()
+        print(f"[ERROR] Erro ao resetar fase de grupos para campeonato {id}: {e}")
+        import traceback
+        traceback.print_exc()
+        # Garantir que foreign keys seja reabilitada
+        try:
+            db.session.execute(text('PRAGMA foreign_keys = ON'))
+        except:
+            pass
         return jsonify({'erro': str(e)}), 400
 
 

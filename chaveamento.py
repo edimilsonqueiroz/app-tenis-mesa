@@ -135,10 +135,13 @@ def montar_preview_categoria(jogadores):
 
 
 def _deletar_partidas_existentes(campeonato_id):
-    partidas = ChaveamentoPartida.query.filter_by(campeonato_id=campeonato_id).all()
-    for partida in partidas:
-        db.session.delete(partida)
-    db.session.flush()
+    """Deleta todas as partidas mata-mata do campeonato."""
+    try:
+        ChaveamentoPartida.query.filter_by(campeonato_id=campeonato_id).delete(synchronize_session=False)
+        db.session.flush()
+    except Exception as e:
+        print(f"[ERROR] Erro ao deletar partidas existentes: {e}")
+        raise
 
 
 def _criar_arvore_partidas(campeonato_id, categoria, participantes, partidas_por_rodada):
@@ -226,7 +229,8 @@ def sincronizar_mesa_com_partida(partida, mesa=None):
     if not mesa:
         return partida
 
-    Jogador.query.filter_by(mesa_id=mesa.id).delete(synchronize_session=False)
+    from models import JogadorMesa
+    JogadorMesa.query.filter_by(mesa_id=mesa.id).delete(synchronize_session=False)
     _resetar_placar_mesa(mesa)
 
     participantes = [
@@ -238,12 +242,19 @@ def sincronizar_mesa_com_partida(partida, mesa=None):
         if not inscrito:
             continue
 
-        db.session.add(Jogador(
+        jogador = Jogador(
             nome=inscrito.nome,
-            mesa_id=mesa.id,
-            time=time,
             jogador_inscrito_id=inscrito.id
-        ))
+        )
+        db.session.add(jogador)
+        db.session.flush()  # Gera o ID do jogador
+        
+        jm = JogadorMesa(
+            jogador_id=jogador.id,
+            mesa_id=mesa.id,
+            time=time
+        )
+        db.session.add(jm)
 
     total_participantes = sum(1 for _, inscrito in participantes if inscrito)
     mesa.status = 'em_uso' if total_participantes == 2 else 'disponivel'
@@ -376,7 +387,8 @@ def liberar_mesa_para_proxima_partida(campeonato_id, partida_id):
         return proxima
 
     # Nenhuma próxima partida pronta — apenas reseta a mesa
-    Jogador.query.filter_by(mesa_id=mesa.id).delete(synchronize_session=False)
+    from models import JogadorMesa
+    JogadorMesa.query.filter_by(mesa_id=mesa.id).delete(synchronize_session=False)
     _resetar_placar_mesa(mesa)
     mesa.status = 'disponivel'
     db.session.flush()
@@ -562,23 +574,87 @@ def _gerar_schedule_round_robin(participantes):
 
 
 def _deletar_grupos_existentes(campeonato_id):
-    grupos = GrupoChaveamento.query.filter_by(campeonato_id=campeonato_id).all()
-    for g in grupos:
-        db.session.delete(g)
-    db.session.flush()
+    """Deleta todos os grupos e dados relacionados do campeonato."""
+    try:
+        print(f"[CLEANUP] Deletando grupos para campeonato {campeonato_id}")
+        
+        # Para SQLite, desabilitar foreign keys check
+        from sqlalchemy import text
+        db.session.execute(text('PRAGMA foreign_keys = OFF'))
+        
+        # Primeiro, obter IDs de todos os grupos
+        grupos = GrupoChaveamento.query.filter_by(campeonato_id=campeonato_id).all()
+        grupos_ids = [g.id for g in grupos]
+        print(f"[CLEANUP] Encontrados {len(grupos_ids)} grupo(s) para deletar")
+        
+        # Deletar TODAS as classificações orphaned (cujo grupo não existe mais)
+        orphaned_count = db.session.execute(
+            text("DELETE FROM classificacoes_grupo WHERE grupo_id NOT IN (SELECT id FROM grupos_chaveamento)")
+        )
+        if orphaned_count.rowcount > 0:
+            print(f"[CLEANUP] Deletadas {orphaned_count.rowcount} classificação(ões) órfã(s)")
+        
+        # Deletar TODAS as classificações do campeonato (para os grupos que vamos deletar)
+        if grupos_ids:
+            count_class = db.session.execute(
+                text("DELETE FROM classificacoes_grupo WHERE grupo_id IN (SELECT id FROM grupos_chaveamento WHERE campeonato_id = :cid)"),
+                {'cid': campeonato_id}
+            )
+            print(f"[CLEANUP] Deletadas {count_class.rowcount} classificação(ões) do campeonato")
+        
+        # Deletar partidas dos grupos
+        count_partidas = db.session.execute(
+            text("DELETE FROM partidas_grupo WHERE campeonato_id = :cid"),
+            {'cid': campeonato_id}
+        )
+        print(f"[CLEANUP] Deletadas {count_partidas.rowcount} partida(s) de grupo")
+        
+        # Deletar todos os grupos do campeonato
+        count_grupos = db.session.execute(
+            text("DELETE FROM grupos_chaveamento WHERE campeonato_id = :cid"),
+            {'cid': campeonato_id}
+        )
+        print(f"[CLEANUP] Deletados {count_grupos.rowcount} grupo(s)")
+        
+        # Uma última verificação e limpeza de qualquer órfão restante
+        final_orphaned = db.session.execute(
+            text("DELETE FROM classificacoes_grupo WHERE grupo_id NOT IN (SELECT id FROM grupos_chaveamento)")
+        )
+        if final_orphaned.rowcount > 0:
+            print(f"[CLEANUP] Deletadas {final_orphaned.rowcount} classificação(ões) órfã(s) finais")
+        
+        # Reabilitar foreign keys check
+        db.session.execute(text('PRAGMA foreign_keys = ON'))
+        db.session.flush()
+        print(f"[CLEANUP] Limpeza concluída com sucesso")
+    except Exception as e:
+        print(f"[ERROR] Erro ao deletar grupos existentes: {e}")
+        # Garantir que foreign keys seja reabilitada em caso de erro
+        try:
+            db.session.execute(text('PRAGMA foreign_keys = ON'))
+        except:
+            pass
+        raise
 
 
 def gerar_fase_grupos(campeonato_id, jogadores_por_grupo=4):
     """Gera a fase de grupos round-robin para cada categoria do campeonato."""
+    print(f"[GRUPOS] Iniciando geração de fase de grupos para campeonato {campeonato_id}")
+    
     _deletar_grupos_existentes(campeonato_id)
     _deletar_partidas_existentes(campeonato_id)
+    
+    print(f"[GRUPOS] Grupos e partidas anterior deletados")
 
     jogadores_por_categoria = defaultdict(list)
     for jogador in _query_jogadores_ativos(campeonato_id).all():
         jogadores_por_categoria[normalizar_categoria(jogador.categoria)].append(jogador)
 
+    print(f"[GRUPOS] Distribuição: {[(cat, len(jogadores)) for cat, jogadores in jogadores_por_categoria.items()]}")
+
     for categoria, jogadores in jogadores_por_categoria.items():
         if len(jogadores) < 2:
+            print(f"[GRUPOS] Categoria '{categoria}': apenas {len(jogadores)} jogador(es), pulando")
             continue
 
         n = len(jogadores)
@@ -601,7 +677,11 @@ def gerar_fase_grupos(campeonato_id, jogadores_por_grupo=4):
         if pendente and grupos_finais:
             grupos_finais[-1].extend(pendente)
 
+        print(f"[GRUPOS] Categoria '{categoria}': {len(grupos_finais)} grupo(s) criados")
+
         for numero, membros in enumerate(grupos_finais, start=1):
+            print(f"[GRUPOS] Criando {categoria} Grupo {numero} com {len(membros)} jogador(es)")
+            
             grupo = GrupoChaveamento(
                 campeonato_id=campeonato_id,
                 categoria=categoria,
@@ -610,6 +690,8 @@ def gerar_fase_grupos(campeonato_id, jogadores_por_grupo=4):
             )
             db.session.add(grupo)
             db.session.flush()
+            
+            print(f"[GRUPOS] Grupo {grupo.id} criado, adicionando classificações")
 
             for membro in membros:
                 db.session.add(ClassificacaoGrupo(
@@ -617,6 +699,8 @@ def gerar_fase_grupos(campeonato_id, jogadores_por_grupo=4):
                     jogador_inscrito_id=membro.id
                 ))
 
+            print(f"[GRUPOS] Gerando partidas do grupo {grupo.id}")
+            
             schedule = _gerar_schedule_round_robin(membros)
             posicao = 1
             for rodada_num, rodada in enumerate(schedule, start=1):
@@ -633,7 +717,9 @@ def gerar_fase_grupos(campeonato_id, jogadores_por_grupo=4):
                     ))
                     posicao += 1
             db.session.flush()
+            print(f"[GRUPOS] {posicao - 1} partidas criadas para grupo {grupo.id}")
 
+    print(f"[GRUPOS] Fase de grupos gerada com sucesso")
     return obter_estado_torneio(campeonato_id)
 
 
@@ -762,18 +848,27 @@ def alocar_partida_grupo_em_mesa(campeonato_id, partida_id, mesa_id):
     partida.mesa_id = mesa.id
     partida.status = 'em_andamento'
 
-    Jogador.query.filter_by(mesa_id=mesa.id).delete(synchronize_session=False)
+    from models import JogadorMesa
+    JogadorMesa.query.filter_by(mesa_id=mesa.id).delete(synchronize_session=False)
     _resetar_placar_mesa(mesa)
 
     for time, inscrito in [(1, partida.jogador_1), (2, partida.jogador_2)]:
         if not inscrito:
             continue
-        db.session.add(Jogador(
+        
+        jogador = Jogador(
             nome=inscrito.nome,
-            mesa_id=mesa.id,
-            time=time,
             jogador_inscrito_id=inscrito.id
-        ))
+        )
+        db.session.add(jogador)
+        db.session.flush()  # Gera o ID do jogador
+        
+        jm = JogadorMesa(
+            jogador_id=jogador.id,
+            mesa_id=mesa.id,
+            time=time
+        )
+        db.session.add(jm)
 
     mesa.status = 'em_uso'
     db.session.flush()
@@ -791,7 +886,8 @@ def liberar_mesa_partida_grupo(campeonato_id, partida_id):
 
     mesa = partida.mesa
     partida.mesa_id = None
-    Jogador.query.filter_by(mesa_id=mesa.id).delete(synchronize_session=False)
+    from models import JogadorMesa
+    JogadorMesa.query.filter_by(mesa_id=mesa.id).delete(synchronize_session=False)
     _resetar_placar_mesa(mesa)
     mesa.status = 'disponivel'
     db.session.flush()

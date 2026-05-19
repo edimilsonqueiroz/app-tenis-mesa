@@ -69,6 +69,7 @@ class JogadorInscrito(db.Model):
 
 class Mesa(db.Model):
     __tablename__ = 'mesas'
+    __table_args__ = (UniqueConstraint('campeonato_id', 'numero', name='uq_campeonato_mesa_numero'),)
     
     id = db.Column(db.Integer, primary_key=True)
     numero = db.Column(db.Integer, nullable=False)
@@ -89,7 +90,7 @@ class Mesa(db.Model):
             'numero': self.numero,
             'campeonato_id': self.campeonato_id,
             'status': self.status,
-            'jogadores': [j.to_dict_com_mesa() for j in self.jogadores_mesa],
+            'jogadores': [j.to_dict() for j in self.jogadores_mesa],
             'placar': self.placar.to_dict() if self.placar else None
         }
 
