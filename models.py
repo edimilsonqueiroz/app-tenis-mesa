@@ -15,7 +15,9 @@ class Campeonato(db.Model):
     
     mesas = db.relationship('Mesa', backref='campeonato', lazy=True, cascade='all, delete-orphan')
     jogadores_inscritos = db.relationship('JogadorInscrito', backref='campeonato', lazy=True, cascade='all, delete-orphan')
+    resultados_partidas = db.relationship('ResultadoPartida', backref='campeonato', lazy=True, cascade='all, delete-orphan')
     partidas_chaveamento = db.relationship('ChaveamentoPartida', backref='campeonato', lazy=True, cascade='all, delete-orphan')
+    partidas_grupo = db.relationship('PartidaGrupo', backref='campeonato', lazy=True, cascade='all, delete-orphan')
     grupos_chaveamento = db.relationship('GrupoChaveamento', backref='campeonato', lazy=True, cascade='all, delete-orphan')
     
     def to_dict(self):

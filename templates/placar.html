@@ -3,8 +3,22 @@
 {% block title %}Placar - Tênis de Mesa{% endblock %}
 
 {% block head %}
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Placar">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/placar.css') }}">
+    <style>
+        /* Fullscreen no mobile */
+        @supports (viewport-fit: cover) {
+            body {
+                padding-top: env(safe-area-inset-top);
+                padding-right: env(safe-area-inset-right);
+                padding-bottom: env(safe-area-inset-bottom);
+                padding-left: env(safe-area-inset-left);
+            }
+        }
+    </style>
 {% endblock %}
 
 {% block content %}
@@ -24,4 +38,5 @@
         window.APP_CONFIG = { campeonatoId: {{ campeonato_id }} };
     </script>
     <script src="{{ url_for('static', filename='js/placar.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/pwa-fullscreen.js') }}"></script>
 {% endblock %}

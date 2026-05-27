@@ -27,9 +27,14 @@ body.placar-only-mode {
     background: #0b0b0b;
 }
 
-body.placar-only-mode .header-info,
-body.placar-only-mode .rodape-info {
+body.placar-only-mode .header-info {
     display: none;
+}
+
+body.placar-only-mode .rodape-info {
+    display: flex;
+    padding: 8px 18px;
+    gap: 24px;
 }
 
 body.placar-only-mode .sets-info {
@@ -197,7 +202,7 @@ body.placar-only-mode .fullscreen-exit-mobile {
 
 .jogadores-header {
     margin-bottom: 20px;
-    min-height: 40px;
+    height: 80px;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -209,7 +214,8 @@ body.placar-only-mode .fullscreen-exit-mobile {
     display: flex;
     flex-direction: column;
     align-items: center;
-    min-height: 40px;
+    height: 80px;
+    justify-content: center;
 }
 
 .jogador-principal {
@@ -221,15 +227,21 @@ body.placar-only-mode .fullscreen-exit-mobile {
 }
 
 .sacador-indicator {
-    display: none;
+    opacity: 0;
+    pointer-events: none;
     margin-top: 10px;
     align-items: center;
     justify-content: center;
     gap: 4px;
+    display: flex;
+    transition: opacity 0.3s ease;
+    min-height: 24px;
+    height: auto;
 }
 
 .sacador-indicator.ativo {
-    display: flex;
+    opacity: 1;
+    pointer-events: auto;
 }
 
 .sacador-dot {
@@ -352,14 +364,19 @@ body.placar-only-mode .fullscreen-exit-mobile {
 
     .jogadores-header {
         min-height: auto;
+        height: auto;
         margin-bottom: 0;
         overflow: visible;
     }
 
     .jogadores-nome {
         min-height: auto;
+        height: auto;
         overflow: visible;
-        display: block;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
         margin-bottom: 1px;
     }
 
@@ -371,8 +388,19 @@ body.placar-only-mode .fullscreen-exit-mobile {
     }
 
     .sacador-indicator {
+        opacity: 0;
+        pointer-events: none;
         margin-top: 1px;
         font-size: 8px;
+        display: flex;
+        height: auto;
+        min-height: 18px;
+        transition: opacity 0.3s ease;
+    }
+
+    .sacador-indicator.ativo {
+        opacity: 1;
+        pointer-events: auto;
     }
 
     .sacador-dot {

@@ -3,6 +3,14 @@ from models import db, Jogador, JogadorMesa, Mesa
 
 bp = Blueprint('jogadores', __name__, url_prefix='/api/jogadores')
 
+
+def _broadcast_atualizacao_mesa(mesa_id, campeonato_id):
+    try:
+        from app import broadcast_jogadores_update
+        broadcast_jogadores_update(mesa_id, campeonato_id)
+    except Exception as e:
+        print(f"[ERRO NO BROADCAST] {str(e)}")
+
 @bp.route('', methods=['POST'])
 def adicionar_jogador():
     """Adiciona um jogador a uma mesa"""
@@ -47,6 +55,8 @@ def adicionar_jogador():
         )
         db.session.add(jogador_mesa)
         db.session.commit()
+
+        _broadcast_atualizacao_mesa(mesa.id, mesa.campeonato_id)
         
         return jsonify(jogador_mesa.to_dict()), 201
     except Exception as e:
@@ -78,6 +88,10 @@ def atualizar_jogador(id):
     
     try:
         db.session.commit()
+
+        if jogador_mesa.mesa:
+            _broadcast_atualizacao_mesa(jogador_mesa.mesa_id, jogador_mesa.mesa.campeonato_id)
+
         return jsonify(jogador_mesa.to_dict())
     except Exception as e:
         db.session.rollback()
@@ -92,8 +106,15 @@ def deletar_jogador(id):
         return jsonify({'erro': 'Jogador não encontrado'}), 404
     
     try:
+        mesa_id = jogador_mesa.mesa_id
+        campeonato_id = jogador_mesa.mesa.campeonato_id if jogador_mesa.mesa else None
+
         db.session.delete(jogador_mesa)
         db.session.commit()
+
+        if mesa_id and campeonato_id:
+            _broadcast_atualizacao_mesa(mesa_id, campeonato_id)
+
         return jsonify({'mensagem': 'Jogador removido da mesa com sucesso'})
     except Exception as e:
         db.session.rollback()

@@ -1,5 +1,6 @@
 """Testes para chaveamento por categoria em campeonatos."""
 import json
+from models import Campeonato, ResultadoPartida, JogadorInscrito, db
 
 
 class TestChaveamentoCampeonato:
@@ -164,3 +165,61 @@ class TestChaveamentoCampeonato:
 
         assert categoria['campeao']['nome'] == 'Ana'
         assert categoria['rodadas'][0]['partidas'][0]['status'] == 'finalizada'
+
+
+class TestExclusaoCampeonato:
+    def test_excluir_campeonato_remove_dados_do_ranking(self, client, app_context):
+        campeonato_1 = Campeonato(nome='Camp Excluir 1', descricao='Remover tudo')
+        campeonato_2 = Campeonato(nome='Camp Excluir 2', descricao='Manter dados')
+        db.session.add_all([campeonato_1, campeonato_2])
+        db.session.flush()
+
+        db.session.add_all([
+            JogadorInscrito(nome='Ana Ranking', campeonato_id=campeonato_1.id),
+            JogadorInscrito(nome='Bia Ranking', campeonato_id=campeonato_2.id)
+        ])
+
+        db.session.add_all([
+            ResultadoPartida(
+                campeonato_id=campeonato_1.id,
+                jogadores_time1='Ana Ranking',
+                jogadores_time2='Vazio',
+                pontos_time1=11,
+                pontos_time2=0,
+                sets_time1=2,
+                sets_time2=0,
+                vencedor_time=1
+            ),
+            ResultadoPartida(
+                campeonato_id=campeonato_2.id,
+                jogadores_time1='Bia Ranking',
+                jogadores_time2='Vazio',
+                pontos_time1=11,
+                pontos_time2=0,
+                sets_time1=2,
+                sets_time2=0,
+                vencedor_time=1
+            )
+        ])
+        db.session.commit()
+
+        response = client.delete(f'/api/campeonatos/{campeonato_1.id}')
+        assert response.status_code == 200
+
+        assert Campeonato.query.get(campeonato_1.id) is None
+        assert ResultadoPartida.query.filter_by(campeonato_id=campeonato_1.id).count() == 0
+        assert JogadorInscrito.query.filter_by(campeonato_id=campeonato_1.id).count() == 0
+        assert ResultadoPartida.query.filter_by(campeonato_id=campeonato_2.id).count() == 1
+
+        ranking_response = client.get('/api/ranking')
+        assert ranking_response.status_code == 200
+        ranking = json.loads(ranking_response.data)
+
+        campeonatos_no_ranking = {
+            campeonato['id']
+            for jogador in ranking
+            for campeonato in jogador.get('campeonatos', [])
+        }
+
+        assert campeonato_1.id not in campeonatos_no_ranking
+        assert campeonato_2.id in campeonatos_no_ranking

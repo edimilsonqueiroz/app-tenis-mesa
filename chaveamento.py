@@ -410,7 +410,13 @@ def registrar_resultado_partida_por_mesa(mesa, vencedor_time):
         return None
 
     jogador_vencedor = next(
-        (jogador for jogador in mesa.jogadores if jogador.time == vencedor_time and jogador.jogador_inscrito_id),
+        (
+            jogador_mesa.jogador
+            for jogador_mesa in mesa.jogadores_mesa
+            if jogador_mesa.time == vencedor_time
+            and jogador_mesa.jogador
+            and jogador_mesa.jogador.jogador_inscrito_id
+        ),
         None
     )
     if not jogador_vencedor:
@@ -908,7 +914,13 @@ def registrar_resultado_partida_grupo_por_mesa(mesa, vencedor_time):
         return None
 
     jogador_vencedor = next(
-        (j for j in mesa.jogadores if j.time == vencedor_time and j.jogador_inscrito_id),
+        (
+            jogador_mesa.jogador
+            for jogador_mesa in mesa.jogadores_mesa
+            if jogador_mesa.time == vencedor_time
+            and jogador_mesa.jogador
+            and jogador_mesa.jogador.jogador_inscrito_id
+        ),
         None
     )
     if not jogador_vencedor:

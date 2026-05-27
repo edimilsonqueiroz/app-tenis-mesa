@@ -19,7 +19,7 @@ app.config.from_object(config)
 # Inicializar extensões
 db.init_app(app)
 CORS(app)
-socketio = SocketIO(app, cors_allowed_origins="*")
+socketio = SocketIO(app, cors_allowed_origins="*", async_mode='threading')
 
 # Registrar blueprints das rotas da API
 register_blueprints(app)

@@ -1,0 +1,52 @@
+/* PWA Fullscreen Styles */
+
+/* Suporte para notch do iPhone */
+@supports (padding: max(0px)) {
+  body {
+    padding-top: max(env(safe-area-inset-top), 0px);
+    padding-left: max(env(safe-area-inset-left), 0px);
+    padding-right: max(env(safe-area-inset-right), 0px);
+    padding-bottom: max(env(safe-area-inset-bottom), 0px);
+  }
+}
+
+/* Modo PWA */
+html.pwa-mode {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+html.pwa-mode body {
+  overflow: hidden;
+  position: fixed;
+  width: 100%;
+  height: 100%;
+}
+
+/* Esconder elementos desnecessários em fullscreen */
+html.pwa-mode .voltar-btn {
+  display: none !important;
+}
+
+/* Melhorar placar em fullscreen */
+html.pwa-mode .placar-container {
+  height: 100vh;
+  padding-top: 0;
+}
+
+html.pwa-mode .header-info {
+  padding-top: max(env(safe-area-inset-top), 8px);
+}
+
+/* Prevenção de scroll em fullscreen */
+html.pwa-mode {
+  overflow: hidden;
+}
+
+/* Status bar no iOS */
+@media only screen and (max-width: 600px) {
+  html.pwa-mode body {
+    padding-top: env(safe-area-inset-top);
+  }
+}

@@ -829,6 +829,7 @@
                 carregarMesa();
                 fecharEditarJogadoresModal();
                 atualizarDisplay(placar);
+                atualizarPlacarMesa();
                 document.getElementById('status-text').textContent = 'Novo jogo iniciado! Jogadores alterados e placar zerado.';
                 setTimeout(() => {
                     document.getElementById('status-text').textContent = '✓ Pronto';
@@ -868,6 +869,7 @@
                 if (data.sucesso) {
                     // Recarregar dados da mesa
                     carregarMesa();
+                    atualizarPlacarMesa();
                     fecharEditarJogadores();
                 } else {
                     alert('Erro ao atualizar jogadores');
@@ -904,6 +906,43 @@
             .catch(error => {
                 console.error('Erro ao alterar formato:', error);
                 alert('Erro ao alterar formato do jogo');
+            });
+        }
+
+        function atualizarPlacarMesa() {
+            const botao = document.getElementById('btn-atualizar-placar');
+            if (botao) botao.disabled = true;
+
+            fetch(`/api/mesas/${mesaId}/atualizar-placar`, {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (!data.sucesso) {
+                    throw new Error(data.erro || 'Não foi possível atualizar o placar');
+                }
+
+                if (data.mesa) {
+                    mesa = data.mesa;
+                    ladosInvertidos = !!(mesa.placar && mesa.placar.lados_invertidos);
+                    renderizarNomesTimesPorLado();
+                }
+
+                if (data.placar) {
+                    atualizarDisplay(data.placar);
+                }
+
+                // Recarrega a mesa para garantir nomes e jogadores mais recentes no controle
+                carregarMesa();
+
+                setStatusTemporario('Placar atualizado na tela da mesa!', 2200);
+            })
+            .catch(error => {
+                console.error('Erro ao atualizar placar:', error);
+                setStatusTemporario(`⚠ ${error.message}`, 2500);
+            })
+            .finally(() => {
+                if (botao) botao.disabled = false;
             });
         }
 

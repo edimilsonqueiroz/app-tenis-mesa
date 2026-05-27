@@ -117,10 +117,11 @@ def resetar_mesa(id):
         # Resetar status da mesa
         mesa.status = 'em_uso'
         
-        # Resetar sets vencidos de cada jogador
-        for jogador in mesa.jogadores:
-            jogador.sets_vencidos = 0
-            print(f"[RESET] Jogador {jogador.nome} - sets vencidos resetados para 0")
+        # Resetar estatísticas por vínculo de mesa
+        for jogador_mesa in mesa.jogadores_mesa:
+            jogador_mesa.sets_vencidos = 0
+            jogador_mesa.pontos_marcados = 0
+            print(f"[RESET] Jogador {jogador_mesa.jogador.nome} - stats resetadas para 0")
         
         db.session.commit()
         
@@ -153,13 +154,18 @@ def atualizar_jogadores(id):
         if time not in [1, 2]:
             return jsonify({'erro': 'time deve ser 1 ou 2', 'sucesso': False}), 400
         
-        # Obter jogadores do time
-        jogadores = [j for j in mesa.jogadores if j.time == time]
+        # Obter vínculos de jogadores do time na mesa
+        jogadores_mesa = [jm for jm in mesa.jogadores_mesa if jm.time == time]
         
         # Atualizar nomes dos jogadores existentes
         for i, nome in enumerate(nomes):
-            if i < len(jogadores):
-                jogadores[i].nome = nome.strip()
+            if i < len(jogadores_mesa):
+                jogadores_mesa[i].jogador.nome = nome.strip()
+
+        # Se o time tinha mais jogadores do que a nova lista, remove os excedentes da mesa
+        if len(jogadores_mesa) > len(nomes):
+            for jogador_mesa in jogadores_mesa[len(nomes):]:
+                db.session.delete(jogador_mesa)
         
         # Mudar status da mesa para 'em_uso' quando há jogadores
         mesa.status = 'em_uso'
@@ -170,9 +176,10 @@ def atualizar_jogadores(id):
         
         # Notificar via Socket.io que os jogadores foram atualizados
         try:
-            from app import broadcast_jogadores_update
+            from app import broadcast_jogadores_update, broadcast_placar_update
             print(f"[BROADCAST] Enviando notificação de atualização de jogadores para mesa {id}")
             broadcast_jogadores_update(id, mesa.campeonato_id)
+            broadcast_placar_update(id, mesa.placar.to_dict())
         except Exception as e:
             print(f"[ERRO NO BROADCAST] {str(e)}")
         
@@ -180,3 +187,31 @@ def atualizar_jogadores(id):
     except Exception as e:
         db.session.rollback()
         return jsonify({'erro': str(e), 'sucesso': False}), 400
+
+
+@bp.route('/<int:id>/atualizar-placar', methods=['POST'])
+def atualizar_placar(id):
+    """Força o refresh do placar e jogadores para clientes inscritos na mesa."""
+    mesa = Mesa.query.get(id)
+
+    if not mesa:
+        return jsonify({'erro': 'Mesa não encontrada', 'sucesso': False}), 404
+
+    if not mesa.placar:
+        return jsonify({'erro': 'Placar não encontrado', 'sucesso': False}), 404
+
+    try:
+        from app import broadcast_jogadores_update, broadcast_placar_update
+
+        broadcast_jogadores_update(mesa.id, mesa.campeonato_id)
+        broadcast_placar_update(mesa.id, mesa.placar.to_dict())
+
+        return jsonify({
+            'sucesso': True,
+            'mensagem': 'Atualização enviada com sucesso',
+            'mesa': mesa.to_dict(),
+            'placar': mesa.placar.to_dict()
+        })
+    except Exception as e:
+        current_app.logger.exception('Erro ao forçar atualização do placar')
+        return jsonify({'erro': str(e), 'sucesso': False}), 500

@@ -5,6 +5,7 @@
         console.log('Campeonato ID:', campeonatoId);
         let placarAnterior = null;
         let ladosInvertidos = false;
+        let ultimoSyncFallback = 0;
         const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
             || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
         let modoFullscreenSimulado = false;
@@ -101,6 +102,15 @@
                 .catch(error => console.error('Erro na sincronização:', error));
         }
 
+        function sincronizarMesaSemExcesso() {
+            const agora = Date.now();
+            if (agora - ultimoSyncFallback < 1200) {
+                return;
+            }
+            ultimoSyncFallback = agora;
+            sincronizarMesa();
+        }
+
         setTimeout(() => {
             const mesaNumero = document.getElementById('mesa-numero');
             if (mesaNumero && mesaNumero.textContent === '--') {
@@ -108,6 +118,19 @@
                 carregarMesa();
             }
         }, 1500);
+
+        // Fallback sem reload: garante atualização de jogadores/placar mesmo se perder evento websocket.
+        setInterval(() => {
+            if (!document.hidden) {
+                sincronizarMesaSemExcesso();
+            }
+        }, 2000);
+
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden) {
+                sincronizarMesaSemExcesso();
+            }
+        });
 
         function carregarMesa() {
             console.log('Carregando mesa:', mesaId);
