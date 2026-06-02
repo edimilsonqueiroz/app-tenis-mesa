@@ -1,0 +1,730 @@
+{% extends "base.html" %}
+
+{% block title %}Importar Jogadores - Tênis de Mesa{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+    :root {
+        --primary-color: #3b82f6;
+        --success-color: #10b981;
+        --warning-color: #f59e0b;
+        --danger-color: #ef4444;
+        --gray-50: #f9fafb;
+        --gray-100: #f3f4f6;
+        --gray-200: #e5e7eb;
+        --gray-300: #d1d5db;
+        --gray-500: #6b7280;
+        --gray-700: #374151;
+        --gray-900: #111827;
+    }
+
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 20px;
+    }
+
+    .container {
+        max-width: 900px;
+        margin: 0 auto;
+    }
+
+    .btn-voltar {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 16px;
+        background: rgba(255, 255, 255, 0.95);
+        color: #3b82f6;
+        border: none;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        margin-bottom: 20px;
+        transition: all 0.3s ease;
+    }
+
+    .btn-voltar:hover {
+        transform: translateX(-4px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .card {
+        background: white;
+        border-radius: 12px;
+        padding: 32px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+        margin-bottom: 24px;
+    }
+
+    .card h1 {
+        color: var(--gray-900);
+        font-size: 28px;
+        margin: 0 0 8px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .card h1 i {
+        color: var(--primary-color);
+        font-size: 32px;
+    }
+
+    .card > p {
+        color: var(--gray-500);
+        margin: 0 0 24px;
+        font-size: 16px;
+    }
+
+    .upload-section {
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        border: 2px dashed var(--primary-color);
+        border-radius: 12px;
+        padding: 40px 20px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        margin-bottom: 24px;
+    }
+
+    .upload-section:hover {
+        background: linear-gradient(135deg, #e0e7ff 0%, #bfdbfe 100%);
+        border-color: #1e40af;
+    }
+
+    .upload-section.dragover {
+        background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+        border-color: #1e40af;
+        box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+    }
+
+    .upload-icon {
+        font-size: 48px;
+        color: var(--primary-color);
+        margin-bottom: 12px;
+        display: block;
+    }
+
+    .upload-section h3 {
+        color: var(--gray-900);
+        margin: 0 0 8px;
+        font-size: 18px;
+    }
+
+    .upload-section p {
+        color: var(--gray-500);
+        margin: 0 0 16px;
+        font-size: 14px;
+    }
+
+    .file-input {
+        display: none;
+    }
+
+    .btn {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .btn-primary {
+        background: var(--primary-color);
+        color: white;
+    }
+
+    .btn-primary:hover {
+        background: #2563eb;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 16px rgba(59, 130, 246, 0.3);
+    }
+
+    .btn-primary:disabled {
+        background: var(--gray-300);
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    .file-name {
+        color: var(--gray-700);
+        margin-top: 12px;
+        padding: 8px 12px;
+        background: var(--gray-100);
+        border-radius: 6px;
+        font-size: 14px;
+        word-break: break-word;
+    }
+
+    .instructions {
+        background: var(--gray-50);
+        border-left: 4px solid var(--primary-color);
+        padding: 16px;
+        border-radius: 6px;
+        margin-bottom: 24px;
+    }
+
+    .instructions h4 {
+        color: var(--gray-900);
+        margin: 0 0 12px;
+        font-size: 14px;
+        font-weight: 600;
+    }
+
+    .instructions ul {
+        margin: 0;
+        padding-left: 20px;
+        color: var(--gray-600);
+        font-size: 13px;
+    }
+
+    .instructions li {
+        margin-bottom: 6px;
+        line-height: 1.5;
+    }
+
+    .instructions code {
+        background: white;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
+        font-size: 12px;
+        color: var(--danger-color);
+    }
+
+    .template-download {
+        text-align: center;
+        padding: 12px;
+        background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+        border: 1px solid var(--success-color);
+        border-radius: 8px;
+        margin-bottom: 24px;
+    }
+
+    .template-download a {
+        color: var(--success-color);
+        text-decoration: none;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 14px;
+    }
+
+    .template-download a:hover {
+        text-decoration: underline;
+    }
+
+    .result-section {
+        margin-top: 24px;
+    }
+
+    .result-section h3 {
+        color: var(--gray-900);
+        font-size: 18px;
+        margin: 0 0 16px;
+    }
+
+    .alert {
+        padding: 16px;
+        border-radius: 8px;
+        margin-bottom: 12px;
+        display: flex;
+        gap: 12px;
+        align-items: flex-start;
+    }
+
+    .alert i {
+        font-size: 20px;
+        flex-shrink: 0;
+        margin-top: 2px;
+    }
+
+    .alert-success {
+        background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+        border-left: 4px solid var(--success-color);
+        color: #065f46;
+    }
+
+    .alert-success i {
+        color: var(--success-color);
+    }
+
+    .alert-warning {
+        background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+        border-left: 4px solid var(--warning-color);
+        color: #78350f;
+    }
+
+    .alert-warning i {
+        color: var(--warning-color);
+    }
+
+    .alert-error {
+        background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+        border-left: 4px solid var(--danger-color);
+        color: #7f1d1d;
+    }
+
+    .alert-error i {
+        color: var(--danger-color);
+    }
+
+    .alert-content {
+        flex: 1;
+    }
+
+    .alert-content p {
+        margin: 0 0 8px;
+        font-weight: 600;
+        font-size: 14px;
+    }
+
+    .alert-details {
+        font-size: 13px;
+        margin-top: 8px;
+        line-height: 1.6;
+    }
+
+    .error-list {
+        margin: 8px 0 0;
+        padding-left: 20px;
+        font-size: 12px;
+    }
+
+    .error-list li {
+        margin-bottom: 4px;
+    }
+
+    .stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 12px;
+        margin-bottom: 16px;
+    }
+
+    .stat {
+        background: var(--gray-50);
+        padding: 12px;
+        border-radius: 8px;
+        text-align: center;
+        border-top: 3px solid var(--primary-color);
+    }
+
+    .stat-value {
+        font-size: 24px;
+        font-weight: 700;
+        color: var(--gray-900);
+        margin-bottom: 4px;
+    }
+
+    .stat-label {
+        font-size: 12px;
+        color: var(--gray-500);
+        text-transform: uppercase;
+        font-weight: 600;
+    }
+
+    .players-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+        margin-top: 12px;
+    }
+
+    .players-table th {
+        background: var(--gray-100);
+        padding: 10px;
+        text-align: left;
+        font-weight: 600;
+        color: var(--gray-700);
+        border-bottom: 2px solid var(--gray-200);
+    }
+
+    .players-table td {
+        padding: 10px;
+        border-bottom: 1px solid var(--gray-200);
+    }
+
+    .players-table tbody tr:hover {
+        background: var(--gray-50);
+    }
+
+    .player-status {
+        display: inline-block;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+
+    .status-adicionado {
+        background: #d1fae5;
+        color: #065f46;
+    }
+
+    .status-reativado {
+        background: #dbeafe;
+        color: #0c4a6e;
+    }
+
+    .spinner {
+        display: inline-block;
+        width: 16px;
+        height: 16px;
+        border: 2px solid var(--gray-300);
+        border-top-color: var(--primary-color);
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+
+    .loading-text {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--gray-600);
+        font-size: 14px;
+    }
+
+    @media (max-width: 768px) {
+        .card {
+            padding: 20px;
+        }
+
+        .upload-section {
+            padding: 24px 16px;
+        }
+
+        .card h1 {
+            font-size: 22px;
+        }
+
+        .stats {
+            grid-template-columns: 1fr;
+        }
+
+        .players-table {
+            font-size: 12px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <button class="btn-voltar" onclick="history.back()">
+        <i class="fas fa-arrow-left"></i> Voltar
+    </button>
+
+    <div class="card">
+        <h1>
+            <i class="fas fa-upload"></i>
+            Importar Jogadores
+        </h1>
+        <p id="campeonato-nome" style="margin-bottom: 24px; color: #6b7280; font-size: 16px;">Carregando...</p>
+
+        <div class="instructions">
+            <h4><i class="fas fa-info-circle"></i> Como usar</h4>
+            <ul>
+                <li>Prepare um arquivo Excel (.xlsx) com os dados dos jogadores</li>
+                <li>A primeira linha deve conter cabeçalhos</li>
+                <li>A partir da segunda linha, cada linha é um jogador</li>
+                <li>Colunas esperadas:
+                    <ul>
+                        <li><code>Nome</code> (obrigatório) - Nome do jogador</li>
+                        <li><code>Nível</code> (opcional) - iniciante, intermediario ou avancado</li>
+                        <li><code>Categoria</code> (opcional) - Nome ou ID da categoria</li>
+                    </ul>
+                </li>
+                <li>Línhas em branco serão ignoradas</li>
+                <li>Jogadores duplicados receberão uma mensagem de erro</li>
+            </ul>
+        </div>
+
+        <div class="template-download">
+            <a href="javascript:downloadTemplate()">
+                <i class="fas fa-file-download"></i> Baixar Modelo de Planilha
+            </a>
+        </div>
+
+        <div class="upload-section" id="upload-area" ondrop="handleDrop(event)" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" onclick="document.getElementById('file-input').click()">
+            <i class="fas fa-cloud-upload-alt upload-icon"></i>
+            <h3>Arraste o arquivo aqui</h3>
+            <p>ou clique para selecionar</p>
+            <button type="button" class="btn btn-primary">
+                <i class="fas fa-folder-open"></i> Selecionar Arquivo
+            </button>
+            <input type="file" id="file-input" class="file-input" accept=".xlsx,.xls" onchange="handleFileSelect(event)">
+            <div id="file-name" style="display: none;" class="file-name">
+                Arquivo selecionado: <span id="file-name-text"></span>
+            </div>
+        </div>
+
+        <button class="btn btn-primary" id="btn-importar" style="display: none; width: 100%; justify-content: center; padding: 12px;" onclick="importarJogadores()">
+            <i class="fas fa-upload"></i> Importar Jogadores
+        </button>
+
+        <div id="result-container" style="display: none;">
+            <div class="result-section">
+                <h3>Resultado da Importação</h3>
+                <div id="result-content"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Extrair campeonato_id do path da URL (/campeonato/{id}/importar-jogadores)
+    let campeonatoId = parseInt(window.location.pathname.split('/')[2]);
+    let arquivoSelecionado = null;
+
+    // Carregar informações do campeonato
+    async function carregarCampeonato() {
+        if (!campeonatoId || isNaN(campeonatoId)) {
+            window.location.href = '/';
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/campeonatos/${campeonatoId}`);
+            const data = await response.json();
+            if (response.ok) {
+                document.getElementById('campeonato-nome').textContent = `Campeonato: ${data.nome}`;
+            }
+        } catch (error) {
+            console.error('Erro ao carregar campeonato:', error);
+        }
+    }
+
+    function handleDragOver(e) {
+        e.preventDefault();
+        document.getElementById('upload-area').classList.add('dragover');
+    }
+
+    function handleDragLeave(e) {
+        document.getElementById('upload-area').classList.remove('dragover');
+    }
+
+    function handleDrop(e) {
+        e.preventDefault();
+        document.getElementById('upload-area').classList.remove('dragover');
+        
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            handleFileSelect({ target: { files } });
+        }
+    }
+
+    function handleFileSelect(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        if (!file.name.match(/\.(xlsx|xls)$/i)) {
+            alert('Por favor, selecione um arquivo Excel (.xlsx ou .xls)');
+            return;
+        }
+
+        arquivoSelecionado = file;
+        document.getElementById('file-name-text').textContent = file.name;
+        document.getElementById('file-name').style.display = 'block';
+        document.getElementById('btn-importar').style.display = 'inline-flex';
+    }
+
+    async function importarJogadores() {
+        if (!arquivoSelecionado) {
+            alert('Por favor, selecione um arquivo');
+            return;
+        }
+
+        const btnImportar = document.getElementById('btn-importar');
+        btnImportar.disabled = true;
+        btnImportar.innerHTML = '<span class="spinner"></span> Importando...';
+
+        const formData = new FormData();
+        formData.append('arquivo', arquivoSelecionado);
+
+        try {
+            const response = await fetch(`/api/campeonatos/${campeonatoId}/importar-jogadores-excel`, {
+                method: 'POST',
+                body: formData
+            });
+
+            const data = await response.json();
+
+            if (response.ok || response.status === 201) {
+                exibirResultado(data, true);
+            } else {
+                exibirResultado(data, false);
+            }
+        } catch (error) {
+            console.error('Erro:', error);
+            btnImportar.disabled = false;
+            btnImportar.innerHTML = '<i class="fas fa-upload"></i> Importar Jogadores';
+            exibirErroResultado(error.message);
+        }
+    }
+
+    function exibirResultado(data, sucesso) {
+        const container = document.getElementById('result-container');
+        const content = document.getElementById('result-content');
+        content.innerHTML = '';
+
+        // Alert principal
+        const statusIcon = sucesso ? 'fa-check-circle' : 'fa-exclamation-circle';
+        const statusClass = sucesso ? 'alert-success' : 'alert-warning';
+        const statusMsg = data.mensagem || (sucesso ? 'Importação concluída' : 'Importação parcial');
+
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert ${statusClass}`;
+        
+        // Adicionar informações adicionais se houver
+        let infoExtra = '';
+        if (data.linhas_processadas !== undefined || data.linhas_vazias !== undefined) {
+            infoExtra = `<p style="margin-top: 8px; font-size: 0.9em; opacity: 0.8;">
+                Linhas processadas: ${data.linhas_processadas || 0} | Linhas vazias: ${data.linhas_vazias || 0}
+            </p>`;
+        }
+        
+        alertDiv.innerHTML = `
+            <i class="fas ${statusIcon}"></i>
+            <div class="alert-content">
+                <p>${statusMsg}</p>
+                ${infoExtra}
+                <div class="stats">
+                    <div class="stat">
+                        <div class="stat-value">${data.jogadores_adicionados || 0}</div>
+                        <div class="stat-label">Adicionados</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value">${data.jogadores_reativados || 0}</div>
+                        <div class="stat-label">Reativados</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value">${data.erros_count || 0}</div>
+                        <div class="stat-label">Erros</div>
+                    </div>
+                </div>
+            </div>
+        `;
+        content.appendChild(alertDiv);
+
+        // Tabela de jogadores importados
+        if (data.jogadores && data.jogadores.length > 0) {
+            const tableHtml = `
+                <h4 style="margin-top: 20px; color: #111827; font-weight: 600;">Jogadores Importados</h4>
+                <table class="players-table">
+                    <thead>
+                        <tr>
+                            <th>Nome</th>
+                            <th>Nível</th>
+                            <th>Categoria</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${data.jogadores.map(j => `
+                            <tr>
+                                <td>${j.nome}</td>
+                                <td>${j.nivel || '-'}</td>
+                                <td>${j.categoria_id || '-'}</td>
+                                <td>
+                                    <span class="player-status status-${j.status}">
+                                        ${j.status === 'adicionado' ? 'Adicionado' : 'Reativado'}
+                                    </span>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+            content.innerHTML += tableHtml;
+        }
+
+        // Erros
+        if (data.erros && data.erros.length > 0) {
+            const errorsHtml = `
+                <div class="alert alert-error" style="margin-top: 16px;">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <div class="alert-content">
+                        <p>Erros encontrados durante a importação:</p>
+                        <ul class="error-list">
+                            ${data.erros.map(erro => `<li>${erro}</li>`).join('')}
+                        </ul>
+                    </div>
+                </div>
+            `;
+            content.innerHTML += errorsHtml;
+        }
+
+        container.style.display = 'block';
+
+        // Reabilitar botão
+        const btnImportar = document.getElementById('btn-importar');
+        btnImportar.disabled = false;
+        btnImportar.innerHTML = '<i class="fas fa-upload"></i> Importar Jogadores';
+    }
+
+    function exibirErroResultado(erro) {
+        const container = document.getElementById('result-container');
+        const content = document.getElementById('result-content');
+        content.innerHTML = `
+            <div class="alert alert-error">
+                <i class="fas fa-times-circle"></i>
+                <div class="alert-content">
+                    <p>Erro ao processar arquivo</p>
+                    <div class="alert-details">${erro}</div>
+                </div>
+            </div>
+        `;
+        container.style.display = 'block';
+    }
+
+    function downloadTemplate() {
+        // Fazer download do arquivo XLSX gerado pelo backend
+        try {
+            fetch(`/api/campeonatos/${campeonatoId}/template-jogadores`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Erro ao baixar arquivo');
+                    }
+                    return response.blob();
+                })
+                .then(blob => {
+                    // Criar URL do blob
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'modelo_jogadores.xlsx';
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    document.body.removeChild(a);
+                })
+                .catch(error => {
+                    console.error('Erro:', error);
+                    alert('Erro ao baixar o arquivo. Tente novamente.');
+                });
+        } catch (error) {
+            console.error('Erro ao fazer download:', error);
+            alert('Erro ao fazer download do arquivo');
+        }
+    }
+
+    // Inicializar
+    carregarCampeonato();
+</script>
+{% endblock %}

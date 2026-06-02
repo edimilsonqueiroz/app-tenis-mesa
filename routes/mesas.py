@@ -32,9 +32,15 @@ def criar_mesa():
         db.session.add(nova_mesa)
         db.session.flush()
         
-        # Criar placar para a mesa
-        placar = Placar(mesa_id=nova_mesa.id)
-        db.session.add(placar)
+        # Criar placar para a mesa (necessário para o sistema de placar)
+        try:
+            placar_existente = Placar.query.filter_by(mesa_id=nova_mesa.id).first()
+            if not placar_existente:
+                placar = Placar(mesa_id=nova_mesa.id)
+                db.session.add(placar)
+        except Exception:
+            pass
+        
         db.session.commit()
         
         return jsonify(nova_mesa.to_dict()), 201

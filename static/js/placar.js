@@ -2,6 +2,16 @@ const campeonatoId = window.APP_CONFIG ? window.APP_CONFIG.campeonatoId : null;
 let socket = io();
 let ultimoSyncFallback = 0;
 
+// Debouncing para evitar múltiplas chamadas simultâneas
+let updateTimeout = null;
+
+function agendarCarregamentoMesas() {
+    if (updateTimeout) clearTimeout(updateTimeout);
+    updateTimeout = setTimeout(() => {
+        carregarMesas();
+    }, 300); // Agrupar atualizações com 300ms de debounce
+}
+
 function renderMesaCard(mesa) {
     return `
         <div class="mesa-placar" data-mesa-id="${mesa.id}">
@@ -70,11 +80,11 @@ socket.on('placar_atualizado', function(data) {
 });
 
 socket.on('mesa_criada', function() {
-    carregarMesas();
+    agendarCarregamentoMesas();
 });
 
 socket.on('mesa_deletada', function() {
-    carregarMesas();
+    agendarCarregamentoMesas();
 });
 
 socket.on('jogadores_atualizados', function(data) {
@@ -83,13 +93,13 @@ socket.on('jogadores_atualizados', function(data) {
             atualizarCardMesa(data.mesa);
             return;
         }
-        carregarMesas();
+        agendarCarregamentoMesas();
     }
 });
 
 socket.on('mesa_atualizada', function(data) {
     if (!data || !data.campeonato_id || Number(data.campeonato_id) === Number(campeonatoId)) {
-        carregarMesas();
+        agendarCarregamentoMesas();
     }
 });
 

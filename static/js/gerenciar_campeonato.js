@@ -8,6 +8,29 @@
         let jogadoresDisponiveisParaMesas = [];
         let buscaDigitadaPorMesa = {};
         let todasAsMesas = []; // Armazenar dados de todas as mesas
+        
+        // Make todasAsMesas globally accessible
+        window.todasAsMesas = todasAsMesas;
+
+        // Debouncing para evitar múltiplas chamadas simultâneas
+        let updateTimeout = null;
+        let updateFlags = {};
+
+        function agendarAtualizacao() {
+            if (updateTimeout) clearTimeout(updateTimeout);
+            updateTimeout = setTimeout(() => {
+                if (updateFlags.mesas && (paginaMesas || paginaChaveamento)) {
+                    carregarMesas();
+                }
+                if (updateFlags.torneio && paginaChaveamento) {
+                    carregarTorneio();
+                }
+                if (updateFlags.jogadores && paginaJogadores) {
+                    carregarJogadoresInscritos();
+                }
+                updateFlags = {};
+            }, 300); // Agrupar atualizações com 300ms de debounce
+        }
 
         socket.on('connect', function() {
             console.log('Conectado ao servidor');
@@ -16,35 +39,41 @@
         });
 
         socket.on('mesa_criada', function(data) {
-            if (paginaMesas || paginaChaveamento) carregarMesas();
+            updateFlags.mesas = true;
+            agendarAtualizacao();
         });
 
         socket.on('mesa_deletada', function(data) {
-            if (paginaMesas || paginaChaveamento) carregarMesas();
+            updateFlags.mesas = true;
+            agendarAtualizacao();
         });
 
         socket.on('placar_atualizado', function(data) {
-            if (paginaMesas || paginaChaveamento) carregarMesas();
-            if (paginaChaveamento) carregarTorneio();
+            updateFlags.mesas = true;
+            updateFlags.torneio = true;
+            agendarAtualizacao();
         });
 
         socket.on('jogadores_atualizados', function(data) {
-            console.log('👥 Jogadores atualizados - recarregando mesas');
-            if (paginaMesas || paginaChaveamento) carregarMesas();
-            if (paginaJogadores) carregarJogadoresInscritos();
-            if (paginaChaveamento) carregarTorneio();
+            console.log('👥 Jogadores atualizados - atualizando UI');
+            updateFlags.mesas = true;
+            updateFlags.jogadores = true;
+            updateFlags.torneio = true;
+            agendarAtualizacao();
         });
 
         socket.on('mesa_atualizada', function(data) {
-            console.log('🔄 Mesa atualizada - recarregando mesas');
-            if (paginaMesas || paginaChaveamento) carregarMesas();
-            if (paginaChaveamento) carregarTorneio();
+            console.log('🔄 Mesa atualizada - atualizando UI');
+            updateFlags.mesas = true;
+            updateFlags.torneio = true;
+            agendarAtualizacao();
         });
 
         socket.on('chaveamento_atualizado', function(data) {
             console.log('🏆 Chaveamento atualizado');
-            if (paginaMesas || paginaChaveamento) carregarMesas();
-            if (paginaChaveamento) carregarTorneio();
+            updateFlags.mesas = true;
+            updateFlags.torneio = true;
+            agendarAtualizacao();
         });
 
         socket.on('controle_conectado', function(data) {
@@ -69,9 +98,19 @@
                 .then(response => response.json())
                 .then(campeonato => {
                     document.getElementById('nome-campeonato').textContent = campeonato.nome;
-                    if (paginaMesas || paginaChaveamento) carregarMesas();
-                    if (paginaJogadores) carregarJogadoresInscritos();
-                    if (paginaChaveamento) carregarTorneio();
+                    
+                    let mesasPromise = Promise.resolve();
+                    if (paginaMesas || paginaChaveamento) {
+                        mesasPromise = carregarMesas();
+                    }
+                    
+                    mesasPromise.then(() => {
+                        if (paginaJogadores) {
+                            carregarJogadoresInscritos();
+                            if (typeof carregarCategorias === 'function') carregarCategorias();
+                        }
+                        if (paginaChaveamento) carregarTorneio();
+                    });
                 })
                 .catch(error => console.error('Erro ao carregar campeonato:', error));
         }
@@ -87,7 +126,7 @@
 
         function carregarMesas() {
             console.log(`📡 Carregando mesas para campeonato ${campeonatoId}...`);
-            fetch(`/api/campeonatos/${campeonatoId}/mesas`)
+            return fetch(`/api/campeonatos/${campeonatoId}/mesas`)
                 .then(response => {
                     console.log('📥 Resposta recebida:', response.status);
                     if (!response.ok) {
@@ -98,6 +137,7 @@
                 .then(mesasData => {
                     console.log('✅ Mesas carregadas:', mesasData);
                     todasAsMesas = mesasData;
+                    window.todasAsMesas = todasAsMesas; // Update global reference
                     const container = document.getElementById('mesas-container');
                     if (!container) {
                         return;
@@ -160,10 +200,10 @@
                 .catch(error => {
                     console.error('❌ Erro ao carregar mesas:', error);
                     const container = document.getElementById('mesas-container');
-                    if (!container) {
-                        return;
+                    if (container) {
+                        container.innerHTML = `<p style="color: red; padding: 20px;">Erro ao carregar mesas: ${error.message}</p>`;
                     }
-                    container.innerHTML = `<p style="color: red; padding: 20px;">Erro ao carregar mesas: ${error.message}</p>`;
+                    return Promise.resolve(); // Retornar Promise resolvida mesmo em erro
                 });
         }
 
@@ -462,7 +502,19 @@
         // ---------- FASE DE GRUPOS ----------
 
         function gerarFaseGrupos() {
-            const n = parseInt(prompt('Jogadores por grupo (padrão: 4):', '4') || '4');
+            // Use default 4 jogadores por grupo if prompt is not available
+            const defaultValue = '4';
+            let n = 4;
+            try {
+                const inputValue = prompt('Jogadores por grupo (padrão: 4):', defaultValue);
+                if (inputValue) {
+                    n = parseInt(inputValue) || 4;
+                }
+            } catch (e) {
+                // prompt() not available, use default
+                n = 4;
+            }
+            
             if (isNaN(n) || n < 2) { alert('Número inválido.'); return; }
 
             fetch(`/api/campeonatos/${campeonatoId}/fase-grupos`, {
@@ -539,87 +591,200 @@
             .catch(error => { console.error(error); alert(error.message); });
         }
 
+        function desalocarPartidaGrupo(partidaId) {
+            if (!confirm('Tem certeza que deseja remover este jogo da mesa?\n\nO jogo voltará para status "Pronta" e a mesa será liberada.')) return;
+
+            fetch(`/api/campeonatos/${campeonatoId}/grupos/partidas/${partidaId}/desalocar-mesa`, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' }
+            })
+            .then(response => response.json().then(data => ({ ok: response.ok, data })))
+            .then(({ ok, data }) => {
+                if (!ok) throw new Error(data.erro || 'Erro ao desalocar partida');
+                alert(data.mensagem || 'Jogo desalocado com sucesso!');
+                carregarMesas(); carregarTorneio();
+            })
+            .catch(error => { console.error(error); alert(error.message); });
+        }
+
         // ---------- RENDERIZAÇÃO DE GRUPOS ----------
 
         function renderizarGrupo(grupo, categoria) {
             const letras = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-            const nomeGrupo = `Grupo ${letras[(grupo.numero - 1) % 26]}`;
+            const letraGrupo = letras[(grupo.numero - 1) % 26];
             const statusLabels = { pendente: 'Pendente', em_andamento: 'Em andamento', finalizado: 'Finalizado' };
             const statusClasses = { pendente: 'pendente', em_andamento: 'em_andamento', finalizado: 'finalizada' };
 
-            const classificacaoHtml = `
-                <div class="classificacao-card">
-                    <div class="classificacao-head">
-                        <span><i class="fas fa-table-list"></i> Classificação</span>
-                        <span>${grupo.classificacao.length} atleta(s)</span>
+            // Lista de jogadores do grupo
+            const jogadoresHtml = `
+                <div class="jogadores-grupo-box">
+                    <div class="jogadores-header"><i class="fas fa-users"></i> Jogadores do Grupo</div>
+                    <div class="jogadores-lista">
+                        ${grupo.classificacao.map((c, idx) => `
+                            <div class="jogador-badge">
+                                <span class="numero-jogador">${idx + 1}</span>
+                                <span class="nome-jogador">${escapeHtml(c.jogador ? c.jogador.nome : '?')}</span>
+                            </div>
+                        `).join('')}
                     </div>
+                </div>`;
+
+            // Agrupar partidas por rodada
+            const partidasPorRodada = {};
+            grupo.partidas.forEach(p => {
+                if (!partidasPorRodada[p.rodada_grupo]) {
+                    partidasPorRodada[p.rodada_grupo] = [];
+                }
+                partidasPorRodada[p.rodada_grupo].push(p);
+            });
+            
+            // Ordenar rodadas
+            const rodasOrdenadas = Object.keys(partidasPorRodada).map(Number).sort((a, b) => a - b);
+
+            const confrontosHtml = rodasOrdenadas.length === 0 ? '' : `
+                <div class="confrontos-grupo-detalhado">
+                    <div class="confrontos-titulo-main"><i class="fas fa-crossed-swords"></i> Confrontos do Grupo ${letraGrupo}</div>
+                    <div class="rodadas-container">
+                        ${rodasOrdenadas.map(rodada => `
+                            <div class="rodada-box">
+                                <div class="rodada-numero">Rodada ${rodada}</div>
+                                <div class="rodada-partidas">
+                                    ${partidasPorRodada[rodada].map(p => {
+                                        const statusLabels = { pronta: 'Pronta', em_andamento: 'Em andamento', finalizada: 'Finalizada' };
+                                        const statusIcons = { pronta: '<i class="fas fa-hourglass"></i>', em_andamento: '<i class="fas fa-play"></i>', finalizada: '<i class="fas fa-check"></i>' };
+                                        const finalizada = p.status === 'finalizada';
+                                        let acoesHtml = '';
+                                        if (finalizada && p.mesa) {
+                                            acoesHtml = `<div class="partida-acoes"><button class="btn-liberar-mesa" onclick="liberarMesaPartidaGrupo(${p.id})"><i class="fas fa-forward"></i> Liberar Mesa</button></div>`;
+                                        } else if (!finalizada) {
+                                            const opcoes = todasAsMesas.map(m => `<option value="${m.id}" ${p.mesa && p.mesa.id === m.id ? 'selected' : ''}>Mesa ${m.numero}</option>`).join('');
+                                            if (p.mesa) {
+                                                // Partida já alocada: mostrar desalocar
+                                                acoesHtml = `<div class="partida-acoes"><button class="btn-desalocar-mesa" onclick="desalocarPartidaGrupo(${p.id})" title="Remove o jogo da mesa"><i class="fas fa-unlink"></i> Desalocar</button></div>`;
+                                            } else if (opcoes) {
+                                                // Partida não alocada: mostrar select para alocar
+                                                acoesHtml = `<div class="partida-acoes"><select id="mesa-partida-grupo-${p.id}">${opcoes}</select><button onclick="alocarPartidaGrupoNaMesa(${p.id})">Alocar</button></div>`;
+                                            }
+                                        }
+                                        const placarHtml = p.vencedor ? `<div class="partida-resultado-box"><div class="resultado-vencedor"><span class="medal"><i class="fas fa-trophy"></i></span><span class="vencedor-text">${escapeHtml(p.vencedor.nome)}</span></div><div class="resultado-placar">${p.placar_sets_time1 || 0}x${p.placar_sets_time2 || 0}</div></div>` : '';
+                                        return `<div class="partida-card partida-grupo-card ${escapeHtml(p.status || 'pronta')}"><div class="partida-grupo-header"><span class="partida-info">Rodada ${p.rodada_grupo}</span><span class="partida-status-label ${escapeHtml(p.status || 'pronta')}">${statusIcons[p.status] || '<i class="fas fa-circle"></i>'} ${statusLabels[p.status] || p.status}</span></div><div class="partida-jogadores"><div class="jogador-box"><div class="jogador-info">${escapeHtml(p.jogador_1 ? p.jogador_1.nome : 'TBD')}</div></div><div class="versus">vs</div><div class="jogador-box"><div class="jogador-info">${escapeHtml(p.jogador_2 ? p.jogador_2.nome : 'TBD')}</div></div></div>${placarHtml}${p.mesa ? `<div class="partida-mesa-info"><i class="fas fa-map-pin"></i> Mesa ${escapeHtml(String(p.mesa.numero))}</div>` : ''}${p.placar ? renderizarPlacarPartida(p) : ''}${acoesHtml}</div>`;
+                                    }).join('')}
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>`;
+
+            const classificacaoHtml = `
+                <div class="classificacao-final">
+                    <div class="classificacao-titulo"><i class="fas fa-medal"></i> Classificação Final - Grupo ${letraGrupo}</div>
                     <div class="classificacao-table-wrap">
                         <table class="tabela-classificacao">
-                            <thead><tr><th>Pos</th><th>Jogador</th><th>V</th><th>D</th><th>S+</th><th>S-</th><th>Pts</th></tr></thead>
+                            <thead>
+                                <tr>
+                                    <th>Pos</th>
+                                    <th>Jogador</th>
+                                    <th>V</th>
+                                    <th>D</th>
+                                    <th>S+</th>
+                                    <th>S-</th>
+                                    <th>Pts</th>
+                                </tr>
+                            </thead>
                             <tbody>
                                 ${grupo.classificacao.map(c => `
                                     <tr class="${c.avancou ? 'classificado' : ''}">
-                                        <td>${c.posicao ?? '-'}</td>
-                                        <td>${escapeHtml(c.jogador ? c.jogador.nome : '?')}${c.avancou ? ' <span style="font-size:10px;color:#166534;">✓</span>' : ''}</td>
+                                        <td class="pos-col"><strong>${c.posicao ?? '-'}</strong></td>
+                                        <td class="nome-col">${escapeHtml(c.jogador ? c.jogador.nome : '?')}${c.avancou ? ' <span class="avancou-badge"><i class="fas fa-check"></i></span>' : ''}</td>
                                         <td>${c.partidas_vencidas}</td>
                                         <td>${c.partidas_perdidas}</td>
                                         <td>${c.sets_vencidos}</td>
                                         <td>${c.sets_perdidos}</td>
                                         <td><strong>${c.pontos}</strong></td>
-                                    </tr>`).join('')}
+                                    </tr>
+                                `).join('')}
                             </tbody>
                         </table>
                     </div>
                 </div>`;
 
-            const partidasHtml = grupo.partidas.length === 0 ? '' : `
-                <div class="partidas-grupo-lista">
-                    ${grupo.partidas.map(p => renderizarPartidaGrupo(p)).join('')}
-                </div>`;
-
             return `
-                <div class="grupo-card">
-                    <div class="grupo-header">
-                        <div>
-                            <span class="grupo-titulo">${escapeHtml(nomeGrupo)} — ${escapeHtml(categoria)}</span>
-                            <div class="grupo-subinfo">${grupo.partidas.length} partidas programadas</div>
+                <div class="grupo-card-novo">
+                    <div class="grupo-header-novo">
+                        <div class="grupo-titulo-novo">
+                            <span class="letra-grupo">${letraGrupo}</span>
+                            <span class="info-grupo">
+                                <span class="categoria-nome">${categoria}</span>
+                                <span class="status-badge ${statusClasses[grupo.status] || 'pendente'}">${statusLabels[grupo.status] || grupo.status}</span>
+                            </span>
                         </div>
-                        <span class="partida-status ${statusClasses[grupo.status] || 'pendente'}">${statusLabels[grupo.status] || grupo.status}</span>
                     </div>
+                    ${jogadoresHtml}
+                    ${confrontosHtml}
                     ${classificacaoHtml}
-                    ${partidasHtml}
                 </div>`;
         }
 
         function renderizarPartidaGrupo(partida) {
             const statusLabels = { pronta: 'Pronta', em_andamento: 'Em andamento', finalizada: 'Finalizada' };
+            const statusIcons = { pronta: '<i class="fas fa-hourglass"></i>', em_andamento: '<i class="fas fa-play"></i>', finalizada: '<i class="fas fa-check"></i>' };
             const finalizada = partida.status === 'finalizada';
+
+            console.log(`[Partida ${partida.id}] Renderizando - Status: ${partida.status}, Mesas disponíveis: ${todasAsMesas.length}`);
 
             let acoesHtml = '';
             if (finalizada && partida.mesa) {
                 acoesHtml = `<div class="partida-acoes"><button class="btn-liberar-mesa" onclick="liberarMesaPartidaGrupo(${partida.id})"><i class="fas fa-forward"></i> Liberar Mesa</button></div>`;
             } else if (!finalizada) {
-                const opcoes = todasAsMesas.map(m =>
-                    `<option value="${m.id}" ${partida.mesa && partida.mesa.id === m.id ? 'selected' : ''}>Mesa ${m.numero}</option>`
-                ).join('');
-                if (opcoes) {
-                    acoesHtml = `<div class="partida-acoes">
-                        <select id="mesa-partida-grupo-${partida.id}">${opcoes}</select>
-                        <button onclick="alocarPartidaGrupoNaMesa(${partida.id})">Alocar</button>
-                    </div>`;
+                if (partida.mesa) {
+                    // Se tem mesa alocada e não está finalizada: mostrar botão de desalocar
+                    acoesHtml = `<div class="partida-acoes"><button class="btn-desalocar-mesa" onclick="desalocarPartidaGrupo(${partida.id})" title="Remove o jogo da mesa"><i class="fas fa-unlink"></i> Desalocar</button></div>`;
+                } else {
+                    // Se não tem mesa: mostrar select + botão de alocar
+                    const opcoes = todasAsMesas.map(m =>
+                        `<option value="${m.id}">Mesa ${m.numero}</option>`
+                    ).join('');
+                    if (opcoes) {
+                        acoesHtml = `<div class="partida-acoes">
+                            <select id="mesa-partida-grupo-${partida.id}">${opcoes}</select>
+                            <button onclick="alocarPartidaGrupoNaMesa(${partida.id})">Alocar</button>
+                        </div>`;
+                    } else {
+                        console.warn(`[Partida ${partida.id}] Sem mesas disponíveis para alocar`);
+                    }
                 }
             }
 
+            const placarHtml = partida.vencedor ? `
+                <div class="partida-resultado-box">
+                    <div class="resultado-vencedor">
+                        <span class="medal"><i class="fas fa-trophy"></i></span>
+                        <span class="vencedor-text">${escapeHtml(partida.vencedor.nome)}</span>
+                    </div>
+                    <div class="resultado-placar">
+                        ${partida.placar_sets_time1 || 0}x${partida.placar_sets_time2 || 0}
+                    </div>
+                </div>
+            ` : '';
+
             return `
                 <div class="partida-card partida-grupo-card ${escapeHtml(partida.status || 'pronta')}">
-                    <div class="partida-header">
-                        <span>R${partida.rodada_grupo} · P${partida.posicao}</span>
-                        <span class="partida-status ${escapeHtml(partida.status || 'pronta')}">${statusLabels[partida.status] || partida.status}</span>
+                    <div class="partida-grupo-header">
+                        <span class="partida-info">Rodada ${partida.rodada_grupo}</span>
+                        <span class="partida-status-label ${escapeHtml(partida.status || 'pronta')}">
+                            ${statusIcons[partida.status] || '<i class="fas fa-circle"></i>'} ${statusLabels[partida.status] || partida.status}
+                        </span>
                     </div>
-                    ${renderizarPartidaJogador(partida.jogador_1)}
-                    ${renderizarPartidaJogador(partida.jogador_2)}
-                    ${partida.vencedor ? `<div class="partida-vencedor"><strong>Vencedor:</strong> ${escapeHtml(partida.vencedor.nome)}</div>` : ''}
-                    ${partida.mesa ? `<div class="partida-mesa"><strong>Mesa:</strong> ${escapeHtml(String(partida.mesa.numero))}</div>` : ''}
+                    <div class="partida-jogadores">
+                        <div class="jogador-box">
+                            <div class="jogador-info">${escapeHtml(partida.jogador_1 ? partida.jogador_1.nome : 'TBD')}</div>
+                        </div>
+                        <div class="versus">vs</div>
+                        <div class="jogador-box">
+                            <div class="jogador-info">${escapeHtml(partida.jogador_2 ? partida.jogador_2.nome : 'TBD')}</div>
+                        </div>
+                    </div>
+                    ${placarHtml}
+                    ${partida.mesa ? `<div class="partida-mesa-info">📍 Mesa ${escapeHtml(String(partida.mesa.numero))}</div>` : ''}
                     ${partida.placar ? renderizarPlacarPartida(partida) : ''}
                     ${acoesHtml}
                 </div>`;
@@ -628,82 +793,113 @@
         // ---------- CARREGAMENTO PRINCIPAL ----------
 
         function carregarTorneio() {
-            fetch(`/api/campeonatos/${campeonatoId}/torneio`)
-                .then(response => {
-                    if (!response.ok) throw new Error(`Erro HTTP: ${response.status}`);
-                    return response.json();
-                })
-                .then(torneio => {
-                    const faseLabels = {
-                        sem_dados: 'Sem dados — cadastre jogadores e gere os grupos',
-                        grupos: 'Fase de grupos em andamento',
-                        aguardando_avanco: 'Grupos finalizados — pronto para avançar ao mata-mata',
-                        mata_mata: 'Mata-mata em andamento',
-                        concluido: 'Torneio concluído'
-                    };
-                    document.getElementById('torneio-fase-label').textContent = faseLabels[torneio.fase_atual] || torneio.fase_atual;
+            // Garantir que mesas estão carregadas antes de renderizar grupos
+            const renderizarGrupos = () => {
+                fetch(`/api/campeonatos/${campeonatoId}/torneio`)
+                    .then(response => {
+                        if (!response.ok) throw new Error(`Erro HTTP: ${response.status}`);
+                        return response.json();
+                    })
+                    .then(torneio => {
+                        const faseLabels = {
+                            sem_dados: 'Sem dados — cadastre jogadores e gere os grupos',
+                            grupos: 'Fase de grupos em andamento',
+                            aguardando_avanco: 'Grupos finalizados — pronto para avançar ao mata-mata',
+                            mata_mata: 'Mata-mata em andamento',
+                            concluido: 'Torneio concluído'
+                        };
+                        const faseLabel = document.getElementById('torneio-fase-label');
+                        if (faseLabel) {
+                            faseLabel.textContent = faseLabels[torneio.fase_atual] || torneio.fase_atual;
+                        }
 
                     const btnAvancar = document.getElementById('btn-avancar-mata-mata');
-                    btnAvancar.style.display = torneio.fase_atual === 'aguardando_avanco' ? '' : 'none';
+                    if (btnAvancar) {
+                        btnAvancar.style.display = torneio.fase_atual === 'aguardando_avanco' ? '' : 'none';
+                    }
 
                     const btnResetar = document.getElementById('btn-resetar-fase-grupos');
-                    btnResetar.style.display = torneio.tem_grupos ? '' : 'none';
+                    if (btnResetar) {
+                        btnResetar.style.display = torneio.tem_grupos ? '' : 'none';
+                    }
 
                     // Grupos
                     const gruposSection = document.getElementById('grupos-section');
                     const gruposContainer = document.getElementById('grupos-container');
-                    if (torneio.tem_grupos) {
-                        gruposSection.style.display = '';
-                        gruposContainer.innerHTML = torneio.categorias.map(cat =>
-                            cat.grupos.map(g => renderizarGrupo(g, cat.categoria)).join('')
-                        ).join('');
-                    } else {
-                        gruposSection.style.display = 'none';
+                    if (gruposSection && gruposContainer) {
+                        if (torneio.tem_grupos) {
+                            gruposSection.style.display = '';
+                            gruposContainer.innerHTML = torneio.categorias.map(cat => `
+                                <div class="categoria-section-grupos">
+                                    <div class="categoria-header-grupos">
+                                    <h2 class="categoria-titulo-grupos">${escapeHtml(cat.categoria)}</h2>
+                                    ${cat.descricao ? `<p class="categoria-descricao-grupos">${escapeHtml(cat.descricao)}</p>` : ''}
+                                </div>
+                                <div class="grupos-by-categoria">
+                                    ${cat.grupos.map(g => renderizarGrupo(g, cat.categoria)).join('')}
+                                </div>
+                            </div>
+                        `).join('');
+                        } else {
+                            gruposSection.style.display = 'none';
+                        }
                     }
 
                     // Mata-mata
                     const mataMataSection = document.getElementById('mata-mata-section');
                     const kkContainer = document.getElementById('chaveamento-container');
-                    if (torneio.tem_mata_mata) {
-                        mataMataSection.style.display = '';
-                        if (torneio.tem_grupos) {
-                            mataMataSection.querySelector('.subsection-title') || mataMataSection.insertAdjacentHTML('afterbegin', '<div class="subsection-title">Mata-Mata</div>');
+                    if (mataMataSection && kkContainer) {
+                        if (torneio.tem_mata_mata) {
+                            mataMataSection.style.display = '';
+                            if (torneio.tem_grupos) {
+                                mataMataSection.querySelector('.subsection-title') || mataMataSection.insertAdjacentHTML('afterbegin', '<div class="subsection-title">Mata-Mata</div>');
+                            }
+                            const categoriasKo = torneio.categorias.filter(c => c.mata_mata && c.mata_mata.rodadas && c.mata_mata.rodadas.length > 0);
+                            kkContainer.innerHTML = `<div class="chaveamento-grid">${categoriasKo.map(c => {
+                                const mm = c.mata_mata;
+                                return `<div class="categoria-card">
+                                    <div class="categoria-head">
+                                        <div class="categoria-title-wrap">
+                                            <h3>${escapeHtml(c.categoria)}</h3>
+                                            <p class="categoria-subtitle">${mm.rodadas.length} rodada(s) no mata-mata</p>
+                                        </div>
+                                        <div class="categoria-meta">
+                                            <span class="categoria-badge">${mm.total_jogadores} jogador(es)</span>
+                                            <span class="categoria-badge">Chave ${mm.tamanho_chave}</span>
+                                        </div>
+                                    </div>
+                                    ${mm.campeao ? `<div class="campeao-highlight"><div class="campeao-label"><i class="fas fa-crown"></i> Campeão</div>${renderizarPartidaJogador(mm.campeao)}</div>` : ''}
+                                    <div class="rodadas-grid">
+                                        ${mm.rodadas.map(rodada => `
+                                            <div class="rodada-card">
+                                                <div class="rodada-badge">${escapeHtml(rodada.nome)}</div>
+                                                ${rodada.partidas.map(p => renderizarPartida(p)).join('')}
+                                            </div>`).join('')}
+                                    </div>
+                                </div>`;
+                            }).join('')}</div>`;
+                        } else if (!torneio.tem_grupos) {
+                            kkContainer.innerHTML = '<p class="chaveamento-vazio">Gere a fase de grupos para iniciar o torneio.</p>';
+                        } else {
+                            kkContainer.innerHTML = '';
                         }
-                        const categoriasKo = torneio.categorias.filter(c => c.mata_mata && c.mata_mata.rodadas && c.mata_mata.rodadas.length > 0);
-                        kkContainer.innerHTML = `<div class="chaveamento-grid">${categoriasKo.map(c => {
-                            const mm = c.mata_mata;
-                            return `<div class="categoria-card">
-                                <div class="categoria-head">
-                                    <div class="categoria-title-wrap">
-                                        <h3>${escapeHtml(c.categoria)}</h3>
-                                        <p class="categoria-subtitle">${mm.rodadas.length} rodada(s) no mata-mata</p>
-                                    </div>
-                                    <div class="categoria-meta">
-                                        <span class="categoria-badge">${mm.total_jogadores} jogador(es)</span>
-                                        <span class="categoria-badge">Chave ${mm.tamanho_chave}</span>
-                                    </div>
-                                </div>
-                                ${mm.campeao ? `<div class="campeao-highlight"><div class="campeao-label"><i class="fas fa-crown"></i> Campeão</div>${renderizarPartidaJogador(mm.campeao)}</div>` : ''}
-                                <div class="rodadas-grid">
-                                    ${mm.rodadas.map(rodada => `
-                                        <div class="rodada-card">
-                                            <div class="rodada-badge">${escapeHtml(rodada.nome)}</div>
-                                            ${rodada.partidas.map(p => renderizarPartida(p)).join('')}
-                                        </div>`).join('')}
-                                </div>
-                            </div>`;
-                        }).join('')}</div>`;
-                    } else if (!torneio.tem_grupos) {
-                        kkContainer.innerHTML = '<p class="chaveamento-vazio">Gere a fase de grupos para iniciar o torneio.</p>';
-                    } else {
-                        kkContainer.innerHTML = '';
                     }
                 })
                 .catch(error => {
                     console.error('Erro ao carregar torneio:', error);
-                    document.getElementById('chaveamento-container').innerHTML =
-                        `<p style="color:red;padding:20px;">Erro ao carregar torneio: ${error.message}</p>`;
+                    const kkContainer = document.getElementById('chaveamento-container');
+                    if (kkContainer) {
+                        kkContainer.innerHTML = `<p style="color:red;padding:20px;">Erro ao carregar torneio: ${error.message}</p>`;
+                    }
                 });
+            };
+
+            // Se não temos mesas carregadas, carregar primeiro
+            if (!todasAsMesas || todasAsMesas.length === 0) {
+                carregarMesas().then(() => renderizarGrupos());
+            } else {
+                renderizarGrupos();
+            }
         }
 
         function carregarChaveamento() { carregarTorneio(); }
@@ -780,18 +976,22 @@
                     numero: parseInt(numero)
                 })
             })
-            .then(response => response.json())
-            .then(mesa => {
-                if (mesa.id) {
-                    document.getElementById('numero-mesa').value = '';
-                    carregarMesas();
-                } else {
-                    alert('Erro: ' + (mesa.erro || 'Desconhecido'));
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(error => {
+                        throw new Error(error.erro || `Erro HTTP ${response.status}`);
+                    });
                 }
+                return response.json();
+            })
+            .then(mesa => {
+                document.getElementById('numero-mesa').value = '';
+                alert('✅ Mesa criada com sucesso!');
+                carregarMesas();
             })
             .catch(error => {
                 console.error('Erro ao criar mesa:', error);
-                alert('Erro ao criar mesa');
+                alert('❌ Erro ao criar mesa: ' + error.message);
             });
         }
 

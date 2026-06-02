@@ -4,6 +4,27 @@ from sqlalchemy import UniqueConstraint
 
 db = SQLAlchemy()
 
+class Categoria(db.Model):
+    __tablename__ = 'categorias'
+    __table_args__ = (UniqueConstraint('campeonato_id', 'nome', name='uq_campeonato_categoria_nome'),)
+    
+    id = db.Column(db.Integer, primary_key=True)
+    campeonato_id = db.Column(db.Integer, db.ForeignKey('campeonatos.id'), nullable=False)
+    nome = db.Column(db.String(100), nullable=False)
+    descricao = db.Column(db.String(200))
+    data_criacao = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    jogadores_inscritos = db.relationship('JogadorInscrito', backref='categoria_obj', lazy=True, foreign_keys='JogadorInscrito.categoria_id')
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'campeonato_id': self.campeonato_id,
+            'nome': self.nome,
+            'descricao': self.descricao,
+            'data_criacao': self.data_criacao.isoformat() if self.data_criacao else None
+        }
+
 class Campeonato(db.Model):
     __tablename__ = 'campeonatos'
     
@@ -13,6 +34,7 @@ class Campeonato(db.Model):
     data_criacao = db.Column(db.DateTime, default=datetime.utcnow)
     status = db.Column(db.String(20), default='ativo')  # ativo, pausado, finalizado
     
+    categorias = db.relationship('Categoria', backref='campeonato', lazy=True, cascade='all, delete-orphan')
     mesas = db.relationship('Mesa', backref='campeonato', lazy=True, cascade='all, delete-orphan')
     jogadores_inscritos = db.relationship('JogadorInscrito', backref='campeonato', lazy=True, cascade='all, delete-orphan')
     resultados_partidas = db.relationship('ResultadoPartida', backref='campeonato', lazy=True, cascade='all, delete-orphan')
@@ -49,7 +71,8 @@ class JogadorInscrito(db.Model):
     
     id = db.Column(db.Integer, primary_key=True)
     nome = db.Column(db.String(100), nullable=False)
-    categoria = db.Column(db.String(50), nullable=False, default='Geral')
+    categoria_id = db.Column(db.Integer, db.ForeignKey('categorias.id'), nullable=True)
+    categoria = db.Column(db.String(50), nullable=True, default=None)  # Legado, mantém compatibilidade
     nivel = db.Column(db.String(20), nullable=False, default='iniciante')
     campeonato_id = db.Column(db.Integer, db.ForeignKey('campeonatos.id'), nullable=False)
     data_inscricao = db.Column(db.DateTime, default=datetime.utcnow)
@@ -58,10 +81,17 @@ class JogadorInscrito(db.Model):
     jogadores = db.relationship('Jogador', backref='jogador_inscrito', lazy=True)
     
     def to_dict(self):
+        categoria_nome = None
+        if self.categoria_obj:
+            categoria_nome = self.categoria_obj.nome
+        elif self.categoria:
+            categoria_nome = self.categoria
+        
         return {
             'id': self.id,
             'nome': self.nome,
-            'categoria': self.categoria,
+            'categoria_id': self.categoria_id,
+            'categoria': categoria_nome,
             'nivel': self.nivel,
             'campeonato_id': self.campeonato_id,
             'data_inscricao': self.data_inscricao.isoformat() if self.data_inscricao else None,

@@ -1,7 +1,7 @@
 import math
 from collections import defaultdict
 
-from models import ChaveamentoPartida, ClassificacaoGrupo, GrupoChaveamento, Jogador, JogadorInscrito, Mesa, PartidaGrupo, db
+from models import Categoria, ChaveamentoPartida, ClassificacaoGrupo, GrupoChaveamento, Jogador, JogadorInscrito, Mesa, PartidaGrupo, db
 
 
 def normalizar_categoria(valor):
@@ -654,7 +654,8 @@ def gerar_fase_grupos(campeonato_id, jogadores_por_grupo=4):
 
     jogadores_por_categoria = defaultdict(list)
     for jogador in _query_jogadores_ativos(campeonato_id).all():
-        jogadores_por_categoria[normalizar_categoria(jogador.categoria)].append(jogador)
+        categoria_nome = jogador.categoria_obj.nome if jogador.categoria_obj else jogador.categoria
+        jogadores_por_categoria[normalizar_categoria(categoria_nome)].append(jogador)
 
     print(f"[GRUPOS] Distribuição: {[(cat, len(jogadores)) for cat, jogadores in jogadores_por_categoria.items()]}")
 
@@ -1038,7 +1039,7 @@ def obter_estado_torneio(campeonato_id):
         fase_atual = 'sem_dados'
 
     jogadores = _query_jogadores_ativos(campeonato_id).all()
-    categorias_set = sorted(set(normalizar_categoria(j.categoria) for j in jogadores))
+    categorias_set = sorted(set(normalizar_categoria(j.categoria_obj.nome if j.categoria_obj else j.categoria) for j in jogadores))
 
     grupos_por_categoria = defaultdict(list)
     for g in grupos:
@@ -1048,6 +1049,13 @@ def obter_estado_torneio(campeonato_id):
     for categoria in categorias_set:
         grupos_cat = grupos_por_categoria.get(categoria, [])
         todos_fin_cat = bool(grupos_cat) and all(g.status == 'finalizado' for g in grupos_cat)
+
+        # Buscar descrição da categoria
+        categoria_obj = Categoria.query.filter_by(
+            campeonato_id=campeonato_id,
+            nome=categoria
+        ).first()
+        descricao_cat = categoria_obj.descricao if categoria_obj else None
 
         mata_mata = None
         if tem_mata_mata:
@@ -1083,6 +1091,7 @@ def obter_estado_torneio(campeonato_id):
 
         categorias_serializadas.append({
             'categoria': categoria,
+            'descricao': descricao_cat,
             'grupos': [_serializar_grupo(g) for g in grupos_cat],
             'todos_grupos_finalizados': todos_fin_cat,
             'mata_mata': mata_mata

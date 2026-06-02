@@ -91,14 +91,14 @@
             const mesaPausada = mesa && mesa.status === 'pausada';
             const placarPausado = statusPlacar === 'pausado';
             if (mesaPausada || placarPausado) {
-                statusText.textContent = '⏸ Jogo pausado: não pode alterar os pontos';
+                statusText.textContent = '<i class="fas fa-pause"></i> Jogo pausado: não pode alterar os pontos';
             }
         }
 
         function mostrarMensagemJogoPausado() {
             const statusText = document.getElementById('status-text');
             if (!statusText) return;
-            statusText.textContent = '⏸ Jogo pausado: não pode alterar os pontos';
+            statusText.textContent = '<i class="fas fa-pause"></i> Jogo pausado: não pode alterar os pontos';
         }
 
         function atualizarEstadoBotoesPonto(statusPlacar) {
@@ -134,7 +134,7 @@
                     atualizarMensagemPausa(mesa && mesa.placar ? mesa.placar.status : null);
                     return;
                 }
-                statusText.textContent = '✔ Pronto';
+                statusText.textContent = '<i class="fas fa-check"></i> Pronto';
             }, ms);
         }
 
@@ -287,8 +287,7 @@
                 ultimoTimeComPonto = time;
                 console.log('Resposta adicionar ponto:', data);
                 
-                // Atualiza o display
-                atualizarDisplay(data.placar);
+                // Aguarda o broadcast do WebSocket para atualizar (sincroniza com placar)
                 
                 // Se set foi finalizado
                 if (data.set_info) {
@@ -332,7 +331,7 @@
                 if (!data.placar) {
                     throw new Error(data.erro || 'Não foi possível remover ponto');
                 }
-                atualizarDisplay(data.placar);
+                // Aguarda o broadcast do WebSocket para atualizar (sincroniza com placar)
             })
             .catch(error => {
                 console.error('Erro:', error);
@@ -362,7 +361,7 @@
                 if (!data.placar) {
                     throw new Error(data.erro || 'Não foi possível desfazer ponto');
                 }
-                atualizarDisplay(data.placar);
+                // Aguarda o broadcast do WebSocket para atualizar (sincroniza com placar)
             })
             .catch(error => {
                 console.error('Erro:', error);
@@ -382,7 +381,7 @@
             })
             .then(response => response.json())
             .then(placar => {
-                atualizarDisplay(placar);
+                // Aguarda o broadcast do WebSocket para atualizar (sincroniza com placar)
                 setStatusTemporario('Jogo resetado para zero!', 3000);
             })
             .catch(error => console.error('Erro:', error));
@@ -420,12 +419,11 @@
             })
             .then(data => {
                 console.log('✅ Jogo iniciado com sucesso!', data);
-                atualizarDisplay(data.placar);
+                // Aguarda o broadcast do WebSocket para atualizar (sincroniza com placar)
                 if (mesa) {
                     mesa.status = 'em_uso';
                     mesa.placar = data.placar;
                 }
-                atualizarEstadoBotoesPonto(data.placar ? data.placar.status : null);
                 setStatusTemporario('🎮 Jogo iniciado!', 3000);
                 jogoFinalizado = false;
                 

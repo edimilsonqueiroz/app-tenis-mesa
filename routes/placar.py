@@ -83,11 +83,6 @@ def adicionar_ponto(mesa_id):
         # Valida se o set deve acabar
         validacao = validar_ponto_ittf(placar.pontos_time1, placar.pontos_time2)
         
-        resposta = {
-            'placar': placar.to_dict(),
-            'ittf_info': gerar_status_jogo(placar)
-        }
-        
         if validacao['set_terminado']:
             vencedor_set = validacao['vencedor']
             
@@ -104,12 +99,16 @@ def adicionar_ponto(mesa_id):
                     jogador_mesa.sets_vencidos += 1
                     print(f"[SET CONTABILIZADO] Jogador {jogador_mesa.jogador.nome} (Time {vencedor_set}) venceu um set. Total: {jogador_mesa.sets_vencidos}")
             
-            resposta['set_info'] = {
-                'set_terminado': True,
-                'vencedor': vencedor_set,
-                'sets_time1': placar.sets_time1,
-                'sets_time2': placar.sets_time2,
-                'razao': validacao['razao']
+            resposta = {
+                'placar': placar.to_dict(),
+                'ittf_info': gerar_status_jogo(placar),
+                'set_info': {
+                    'set_terminado': True,
+                    'vencedor': vencedor_set,
+                    'sets_time1': placar.sets_time1,
+                    'sets_time2': placar.sets_time2,
+                    'razao': validacao['razao']
+                }
             }
             
             if result_jogo['jogo_finalizado']:
@@ -174,17 +173,25 @@ def adicionar_ponto(mesa_id):
                 
                 print(f"[SET PRÓXIMO] Set {novo_set_numero} começando. Score: {placar.sets_time1} x {placar.sets_time2}. Servidor: Time {proximo_servidor_inicial}. Serves: 0")
         else:
-            # Set continua, apenas atualiza servidor após cada ponto
-            # IMPORTANTE: Incrementa o contador ANTES de verificar se troca
-            placar.serves_no_set += 1
+            # Set continua, atualiza servidor de acordo com regras ITTF
+            # Usa a função proximo_servidor que detecta automaticamente deuce
+            proximo_info = proximo_servidor(placar.servidor_time, placar.serves_no_set,
+                                           placar.pontos_time1, placar.pontos_time2)
             
-            # Verifica se deve trocar de servidor após cada 2 saques
-            if placar.serves_no_set >= 2:
-                # Troca de servidor
-                placar.servidor_time = 2 if placar.servidor_time == 1 else 1
-                placar.serves_no_set = 0
+            placar.servidor_time = proximo_info['proximo_servidor']
+            placar.serves_no_set = proximo_info['novo_serves']
             
-            print(f"[SAQUE] Time {placar.servidor_time}, Saque {placar.serves_no_set + 1}/2, Pontos: {placar.pontos_time1}x{placar.pontos_time2}")
+            # Determina quantos saques total (em situação normal 2, em deuce 1)
+            saques_totais = 1 if proximo_info['em_deuce'] else 2
+            saque_atual = placar.serves_no_set + 1
+            
+            print(f"[SAQUE] Time {placar.servidor_time}, Saque {saque_atual}/{saques_totais}, Pontos: {placar.pontos_time1}x{placar.pontos_time2}, Em deuce: {proximo_info['em_deuce']}")
+            
+            # Cria resposta para continuação de set
+            resposta = {
+                'placar': placar.to_dict(),
+                'ittf_info': gerar_status_jogo(placar)
+            }
         
         db.session.commit()
         

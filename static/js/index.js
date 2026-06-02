@@ -110,14 +110,19 @@
             fetch(`/api/campeonatos/${campeonatoId}`, {
                 method: 'DELETE'
             })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`Erro HTTP: ${response.status}`);
+                }
+                return response.json();
+            })
             .then(data => {
                 alert('✅ Campeonato deletado com sucesso');
                 carregarCampeonatos();
             })
             .catch(error => {
                 console.error('Erro ao deletar campeonato:', error);
-                alert('Erro ao deletar campeonato');
+                alert('❌ Erro ao deletar campeonato: ' + error.message);
             });
         }
 

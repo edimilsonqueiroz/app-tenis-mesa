@@ -268,6 +268,27 @@ header {
     transform: translateY(-2px);
 }
 
+.btn-desalocar-mesa {
+    background: var(--warning-color);
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 13px;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.btn-desalocar-mesa:hover {
+    background: #ffa500;
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
 .empty-message {
     text-align: center;
     padding: 60px 20px;

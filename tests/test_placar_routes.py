@@ -200,3 +200,61 @@ class TestPlacarRoutes:
         assert 'formatos_disponiveis' in data
         assert 'melhor_de_3' in data['formatos_disponiveis']
         assert 'melhor_de_5' in data['formatos_disponiveis']
+    
+    def test_deuce_saques_alternam(self, client, mesa_com_jogadores):
+        """Testa que em deuce (10x10), os saques alternam a cada ponto"""
+        mesa = mesa_com_jogadores
+        
+        # Definir pontos para 10x10
+        response = client.post(
+            f'/api/placar/mesa/{mesa.id}/set-pontos',
+            json={'pontos_time1': 10, 'pontos_time2': 10}
+        )
+        assert response.status_code == 200
+        
+        # Time 1 saca em 10x10
+        response = client.post(
+            f'/api/placar/mesa/{mesa.id}/adicionar-ponto',
+            json={'time': 1}
+        )
+        assert response.status_code == 200
+        data = json.loads(response.data)
+        
+        # Em deuce, após um ponto ser marcado, deve trocar para time 2
+        assert data['placar']['servidor_time'] == 2
+        assert data['placar']['serves_no_set'] == 0  # Reseta para novo servidor
+        
+        # Próximo ponto com time 2 sacando
+        response = client.post(
+            f'/api/placar/mesa/{mesa.id}/adicionar-ponto',
+            json={'time': 2}
+        )
+        assert response.status_code == 200
+        data = json.loads(response.data)
+        
+        # Deve trocar novamente para time 1
+        assert data['placar']['servidor_time'] == 1
+        assert data['placar']['serves_no_set'] == 0
+    
+    def test_deuce_com_diferenca_1_saques_alternam(self, client, mesa_com_jogadores):
+        """Testa que em deuce (10x11), os saques alternam a cada ponto"""
+        mesa = mesa_com_jogadores
+        
+        # Definir pontos para 10x11 (deuce)
+        response = client.post(
+            f'/api/placar/mesa/{mesa.id}/set-pontos',
+            json={'pontos_time1': 10, 'pontos_time2': 11}
+        )
+        assert response.status_code == 200
+        
+        # Time 1 saca
+        response = client.post(
+            f'/api/placar/mesa/{mesa.id}/adicionar-ponto',
+            json={'time': 1}
+        )
+        assert response.status_code == 200
+        data = json.loads(response.data)
+        
+        # Em deuce com diferença de 1, deve trocar servidor
+        assert data['placar']['servidor_time'] == 2
+        assert data['placar']['serves_no_set'] == 0

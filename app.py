@@ -140,6 +140,10 @@ def gerenciar_campeonato_jogadores(campeonato_id):
     """Página de cadastro e gerenciamento de jogadores"""
     return render_template('gerenciar_campeonato.html', campeonato_id=campeonato_id, modo_pagina='jogadores')
 
+@app.route('/campeonato/<int:campeonato_id>/importar-jogadores')
+def importar_jogadores(campeonato_id):
+    """Página para importar jogadores via planilha Excel"""
+    return render_template('importar_jogadores.html', campeonato_id=campeonato_id)
 
 @app.route('/campeonato/<int:campeonato_id>/chaveamento')
 def gerenciar_campeonato_chaveamento(campeonato_id):
